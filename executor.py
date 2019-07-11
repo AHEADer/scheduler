@@ -6,7 +6,7 @@ from queue import Queue
 
 
 class Executor:
-    def __init__(self, a_scheduler, daemon_server):
+    def __init__(self, daemon_server=None):
         self.execute_queue = Queue()
 
     def execute(self, job, params, machine):

@@ -1,7 +1,7 @@
 import threading
 import queue
 import time
-from executor import *
+from estimator import Estimator
 # First try for 5 epochs and then analysis
 # Predict the converged epoch, use patience strategy
 # Training Time = epoch * time per epoch
@@ -10,14 +10,6 @@ from executor import *
 # compute fairness and total time
 
 # Use message-based design
-
-# job_info struct:
-# {
-# model
-# hyparams
-# join_time
-# abnormal
-# }
 
 
 class Scheduler:
@@ -28,13 +20,16 @@ class Scheduler:
         self.gpu_per_node = gpu_per_node
         self.current_wait_job = None
         self.job_executor = job_executor
+        self.unpredicted_job = queue.Queue()
         self.msg_handler = threading.Thread(target=self._msg_handle, args=())
+        self.msg_handler.start()
 
     def _msg_handle(self):
         while True:
             gpu_info = self.allocate_gpu()
             # see if there is a job get out of queue but waiting for schedule
             if gpu_info is None:
+                # print('GPU is full')
                 # TODO: set sleep time be the shortest remaining time of running jobs
                 time.sleep(10)
                 continue
@@ -51,11 +46,12 @@ class Scheduler:
                         pass
                 else:
                     job_info = self.init_job_queue.get()
+                    print('new job coming!')
                     # New job comes, check if there's available gpu resource
                     self.occupy_gpu(gpu_info)
-                    self.job_executor.execute(gpu_info, job_info)
+                    self.job_executor.execute(job_info['model'], job_info['hyparams'], gpu_info)
                     # No new job coming, sleep some time
-                    continue
+
             # There's priority: trial job > less time job/long waited job > long time job
 
     @staticmethod
@@ -68,7 +64,7 @@ class Scheduler:
     def allocate_gpu(self):
         for key in self.cluster_resource.keys():
             for i in range(self.gpu_per_node):
-                if self.cluster_resource[key][1] == 1:
+                if self.cluster_resource[key][i] == 1:
                     return key, i
         return None
 
@@ -79,14 +75,27 @@ class Scheduler:
         self.cluster_resource[gpu_info[0]][gpu_info[1]] = 1
 
     def priority(self, job_info):
+        # basic:
         pass
+
+    def init_enqueue(self, job_info):
+        self.init_job_queue.put(job_info)
 
     def job_enqueue(self, job_info):
         # record current time
         cur_time = time.time()
         # get predict time
         # TODO change 5 to a parameter for scheduler
-        tm_per_epoch = (job_info['join_time'] - cur_time)/5
-        # epoch =
-
+        tm_per_epoch = (job_info['join_tm'] - cur_time)/5
+        est = Estimator()
+        epoch = est.resnet_predict(job_info['init_f'], 0.01)
+        if epoch == -1:
+            # abnormal training, unpredictable！
+            self.unpredicted_job.put(job_info)
+        else:
+            remaining_tm = epoch * tm_per_epoch
+            job_info['r_tm'] = remaining_tm
+            job_info['priority'] = 0
+            job_info['join2_tm'] = time.time()
+            self.job_queue.put(job_info)
         pass
