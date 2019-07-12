@@ -31,7 +31,8 @@ class Monitor:
             # first release GPU resources
             self.a_scheduler.release_gpu(job_return_info['gpu_info'])
             if job_return_info['status'] == 'init':
-
+                job_info = {}
+                job_info
                 # Then pass job to the queue, scheduler will do the fitting
                 self.a_scheduler.job_enqueue()
             else:
