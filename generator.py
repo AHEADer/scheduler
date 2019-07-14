@@ -20,13 +20,16 @@ class Generator:
             # TODO adjust/tune this number
             epoch = 100
             job = {
+                'id': i+1,
                 'model': 'resnet',
+                'status': 'init',
                 'hyparams': [lr, bs, epoch],
                 'join_tm': tm,
                 'abnormal': False,
                 'init_f': None,
                 'r_tm': np.Inf,
-                'join2_tm': 0
+                'join2_tm': 0,
+                'wait_tm': 0
             }
             self.jobs_list.append([job, tm])
         self.jobs_list = sorted(self.jobs_list, key=lambda ins: ins[1])

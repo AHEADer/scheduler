@@ -42,17 +42,29 @@ class Scheduler:
                     else:
                         job_info = self.job_queue.get()
                         self.occupy_gpu(gpu_info)
-                        self.job_executor.execute(gpu_info, job_info)
+                        self.execute_job(job_info, gpu_info)
                         pass
                 else:
                     job_info = self.init_job_queue.get()
                     print('new job coming!')
                     # New job comes, check if there's available gpu resource
                     self.occupy_gpu(gpu_info)
-                    self.job_executor.execute(job_info['model'], job_info['hyparams'], gpu_info)
+                    self.execute_job(job_info, gpu_info)
                     # No new job coming, sleep some time
 
             # There's priority: trial job > less time job/long waited job > long time job
+
+    def execute_job(self, job_info, gpu_info):
+        # job info from generator or init step
+        wait_tm = time.time()
+        if job_info['status'] == 'init':
+            job_info['wait_tm'] = wait_tm - job_info['join_tm']
+        elif job_info['status'] == 'train':
+            job_info['wait_tm'] = wait_tm - job_info['join2_tm'] + job_info['wait_tm']
+        job_info['loc'] = '/tmp/' + job_info['model'] + job_info['id']
+        job_info['gpu_info'] = gpu_info
+        job_info['exec_tm'] = time.time()
+        self.job_executor.execute(job_info)
 
     @staticmethod
     def cluster_init(node_list, gpu_per_node):
@@ -76,6 +88,7 @@ class Scheduler:
 
     def priority(self, job_info):
         # basic:
+
         pass
 
     def init_enqueue(self, job_info):

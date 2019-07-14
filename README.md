@@ -16,4 +16,6 @@ init_f: data retrived after initial training is finished, list
 r_tm: predition remaining time
 
 join2_tm: the second time when job finish its intial step and enter the queue
+
+wait_tm: waiting time of this job 
 }

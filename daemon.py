@@ -2,7 +2,7 @@
 import threading
 import socket
 import json
-
+import time
 
 def binary_to_dict(the_binary):
     jsn = the_binary.decode('utf-8')
@@ -31,8 +31,12 @@ class Monitor:
             # first release GPU resources
             self.a_scheduler.release_gpu(job_return_info['gpu_info'])
             if job_return_info['status'] == 'init':
-                job_info = {}
-                job_info
+                learning_rate = job_return_info['']
+                features = job_return_info['init_f']
+                # join_tm =
+                job_info = dict(model='resnet', init_f=features, wait_tm=wait_tm)
+                # job_info['hyparams'] =
+
                 # Then pass job to the queue, scheduler will do the fitting
                 self.a_scheduler.job_enqueue()
             else:
