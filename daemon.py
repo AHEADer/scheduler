@@ -53,7 +53,7 @@ class Monitor:
                 job_info['hyparams'] = [learning_rate, batch_size]
                 job_info['abnormal'] = 0
                 # TODO make 5 be a parameter
-                job_info['tm_per_ep'] = (job_return_info['cpt_tm'] - job_return_info['exec_tm'])/5
+                job_info['tm_per_ep'] = (float(job_return_info['cpt_tm']) - float(job_return_info['exec_tm']))/5
                 job_info['status'] = 'train'
 
                 # Then pass job to the queue, scheduler will do the fitting

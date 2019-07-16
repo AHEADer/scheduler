@@ -84,7 +84,7 @@ class Scheduler:
         self.cluster_resource[gpu_info[0]][gpu_info[1]] = 0
 
     def release_gpu(self, gpu_info):
-        self.cluster_resource[gpu_info[0]][gpu_info[1]] = 1
+        self.cluster_resource[gpu_info[0]][int(gpu_info[1])] = 1
 
     def priority(self, job_info):
         # basic:
@@ -95,8 +95,6 @@ class Scheduler:
         self.init_job_queue.put(job_info)
 
     def job_enqueue(self, job_info):
-        print(job_info)
-        exit()
         # record current time
         cur_time = time.time()
         # get predict time
