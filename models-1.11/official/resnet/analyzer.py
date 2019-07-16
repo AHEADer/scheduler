@@ -1,6 +1,4 @@
 import tensorflow as tf
-import matplotlib.pyplot as plt
-import loss_fit
 import scipy.optimize as optimize
 import scipy.stats as stats
 

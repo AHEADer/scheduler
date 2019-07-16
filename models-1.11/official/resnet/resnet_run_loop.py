@@ -402,7 +402,7 @@ def resnet_main(
       model_fn=model_function, model_dir=flags_obj.model_dir, config=run_config,
       warm_start_from=warm_start_settings, 
       params={
-          'learning_rate': int(flags_obj.learning_rate),
+          'learning_rate': float(flags_obj.learning_rate),
           'train_epochs': flags_obj.train_epochs,
           'resnet_size': int(flags_obj.resnet_size),
           'data_format': flags_obj.data_format,

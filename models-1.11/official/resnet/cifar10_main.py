@@ -71,6 +71,11 @@ def get_filenames(is_training, data_dir):
     return [os.path.join(data_dir, 'test_batch.bin')]
 
 
+def dict_to_binary(the_dict):
+  message = json.dumps(the_dict)
+  return message.encode()
+
+
 def parse_record(raw_record, is_training):
   """Parse CIFAR-10 image and label from a raw record."""
   # Convert bytes to a vector of uint8 that is record_bytes long.
@@ -261,6 +266,7 @@ def run_cifar(flags_obj):
   eval_args = []
   train_file = ''
   eval_file = ''
+  train_dir = flags_obj.md
 
   for r, d, f in os.walk(train_dir):
     for file in f:
@@ -268,7 +274,7 @@ def run_cifar(flags_obj):
         if 'eval' in r:
           eval_file = r + '/' + file
         else:
-          train_file = r + file
+          train_file = r + '/' + file
 
   if flags_obj.status == 'init':
     # collect and plot, then connect server
@@ -301,7 +307,7 @@ def run_cifar(flags_obj):
 def sendback(flags_obj, train_args, eval_args, abnormal):
   sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
   ip_address, port = flags_obj.server.split(':')
-  server_address = (ip_address, port)
+  server_address = (ip_address, int(port))
   sock.connect(server_address)
   try:
     message = {}
@@ -309,7 +315,7 @@ def sendback(flags_obj, train_args, eval_args, abnormal):
     message['gpu_info'] = (flags_obj.ni, flags_obj.gi)
     message['loc'] = flags_obj.md
     # temporarily no need of eval_args for prediction model
-    message['init_f'] = [flags_obj.lr, np.log2(flags_obj.bs)] + train_args
+    message['init_f'] = [flags_obj.lr, np.log2(flags_obj.bs)] + list(train_args)
     # complete time
     message['cpt_tm'] = time.time()
     message['ab'] = abnormal
