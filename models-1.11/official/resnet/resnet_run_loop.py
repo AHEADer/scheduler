@@ -536,6 +536,12 @@ def define_resnet_flags(resnet_size_choices=None):
   flags.DEFINE_string(name='learning_rate', short_name='lr', default='0.1',
       help=flags_core.help_wrap('Learning rate at the beginning'))
 
+  flags.DEFINE_string(name='exec_time', short_name='et', default='0',
+      help=flags_core.help_wrap('Time when start'))
+
+  flags.DEFINE_string(name='wait_time', short_name='wt', default='0',
+      help=flags_core.help_wrap('Time that has been waited'))
+
   choice_kwargs = dict(
       name='resnet_size', short_name='rs', default='50',
       help=flags_core.help_wrap('The size of the ResNet model to use.'))

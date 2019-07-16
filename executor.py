@@ -3,6 +3,7 @@ import os
 import sys
 from scheduler import Scheduler
 from queue import Queue
+import threading
 
 
 class Executor:
@@ -17,30 +18,40 @@ class Executor:
         elif job_info['model'] == 'vgg':
             self.execute_vgg(job_info)
 
-    @staticmethod
-    def execute_resnet(job_info):
+    def execute_resnet(self, job_info):
         print(job_info)
         node = job_info['gpu_info'][0]
         gpu = job_info['gpu_info'][1]
-        ssh = 'ssh ' + node
+        ssh = 'ssh ' + node + ' '
         gpu_pre = 'env CUDA_VISIBLE_DEVICES=' + str(gpu)
-        conda = 'conda activate stable'
-        source = 'source .zshrc; source ~/configure/server1'
-        exec_cmd = 'python cifar10_main.py --md=' + job_info['loc'] +\
+        conda = 'conda activate stable; '
+        source = 'source .zshrc; source ~/configure/scheduler1; '
+        cd = 'cd scheduler/models-1.11/official/resnet; '
+        exec_cmd = gpu_pre + ' python cifar10_main.py --md=' + job_info['loc'] +\
                    ' -lr=' + str(job_info['hyparams'][0]) +\
                    ' -bs=' + str(job_info['hyparams'][1]) +\
-                   ' -te=' + str(job_info['hyparams'][2])
+                   ' -te=' + str(job_info['hyparams'][2]) +\
+                   ' -status=' + str(job_info['status']) +\
+                   ' -ni=' + job_info['gpu_info'][0] +\
+                   ' -gi=' + str(job_info['gpu_info'][1]) +\
+                   ' -server=ncrs:5555' +\
+                   ' -et='+str(job_info['exec_tm']) +\
+                   ' -wt='+str(job_info['wait_tm'])
 
-
+        cmd = ssh + '"' + source + conda + cd + exec_cmd + '"'
+        print(cmd)
         # An example here:
         # ssh ncrd "source .zshrc; conda activate stable;
         # source ~/configure/server1; cd models/official/resnet;
         # python cifar10_main.py --model_dir=/home/junda/large_bs"
 
-        # First ssh to that machine
-        # Then execute code with hyperparameters
-        # Note daemon process that a new job is running
-        pass
+        # create a new thread to execute the job
+        # new_job_thread = threading.Thread(target=self.exec_node, args=cmd)
+        # new_job_thread.start()
+
+    @staticmethod
+    def exec_node(cmd):
+        os.system(cmd)
 
     @staticmethod
     def execute_inception(job_info):

@@ -95,11 +95,13 @@ class Scheduler:
         self.init_job_queue.put(job_info)
 
     def job_enqueue(self, job_info):
+        print(job_info)
+        exit()
         # record current time
         cur_time = time.time()
         # get predict time
         # TODO change 5 to a parameter for scheduler
-        tm_per_epoch = (job_info['join_tm'] - cur_time)/5
+        tm_per_epoch = job_info['tm_per_ep']
         est = Estimator()
         epoch = est.resnet_predict(job_info['init_f'], 0.01)
         if epoch == -1:
