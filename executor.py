@@ -27,8 +27,10 @@ class Executor:
         conda = 'conda activate stable'
         source = 'source .zshrc; source ~/configure/server1'
         exec_cmd = 'python cifar10_main.py --md=' + job_info['loc'] +\
-                   ' -lr=' + job_info['hyparams'][0] + ' -bs='+job_info['hyparams'][1] +\
-                   ' -te=' + job_info['hyparams'][2]
+                   ' -lr=' + str(job_info['hyparams'][0]) +\
+                   ' -bs=' + str(job_info['hyparams'][1]) +\
+                   ' -te=' + str(job_info['hyparams'][2])
+
 
         # An example here:
         # ssh ncrd "source .zshrc; conda activate stable;

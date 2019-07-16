@@ -402,6 +402,7 @@ def resnet_main(
       model_fn=model_function, model_dir=flags_obj.model_dir, config=run_config,
       warm_start_from=warm_start_settings, 
       params={
+          'learning_rate': int(flags_obj.learning_rate),
           'train_epochs': flags_obj.train_epochs,
           'resnet_size': int(flags_obj.resnet_size),
           'data_format': flags_obj.data_format,
@@ -523,7 +524,7 @@ def define_resnet_flags(resnet_size_choices=None):
   flags.DEFINE_string(name='node_info', short_name='ni', default=None,
       help=flags_core.help_wrap('Which node this job is running on'))
 
-  flags.DEFINE_string(name='gpu_info', short_name='gi', default=-1,
+  flags.DEFINE_string(name='gpu_info', short_name='gi', default='-1',
       help=flags_core.help_wrap('Which gpu this job is running on'))
 
   flags.DEFINE_string(name='status', short_name='status', default=None,
@@ -532,7 +533,7 @@ def define_resnet_flags(resnet_size_choices=None):
   flags.DEFINE_string(name='server', short_name='server', default=None,
       help=flags_core.help_wrap('Monitor address, format is ip_address:port'))
 
-  flags.DEFINE_string(name='learning_rate', short_name='lr', default=0.1,
+  flags.DEFINE_string(name='learning_rate', short_name='lr', default='0.1',
       help=flags_core.help_wrap('Learning rate at the beginning'))
 
   choice_kwargs = dict(

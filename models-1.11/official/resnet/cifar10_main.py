@@ -195,11 +195,12 @@ class Cifar10Model(resnet_model.Model):
 def cifar10_model_fn(features, labels, mode, params):
   """Model function for CIFAR-10."""
   features = tf.reshape(features, [-1, _HEIGHT, _WIDTH, _NUM_CHANNELS])
-
+  lr = params['learning_rate']
+  te = int(params['train_epochs'])
   learning_rate_fn = resnet_run_loop.learning_rate_with_decay(
       batch_size=params['batch_size'], batch_denom=params['batch_size'],
-      num_images=_NUM_IMAGES['train'], boundary_epochs=[100, 150, 200],
-      decay_rates=[1, 0.1, 0.01, 0.001])
+      num_images=_NUM_IMAGES['train'], boundary_epochs=[te, te, te],
+      decay_rates=[lr, lr, lr, lr])
 
   # We use a weight decay of 0.0002, which performs better
   # than the 0.0001 that was originally suggested.
