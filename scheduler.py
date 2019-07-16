@@ -61,7 +61,7 @@ class Scheduler:
             job_info['wait_tm'] = wait_tm - job_info['join_tm']
         elif job_info['status'] == 'train':
             job_info['wait_tm'] = wait_tm - job_info['join2_tm'] + job_info['wait_tm']
-        job_info['loc'] = '/tmp/' + job_info['model'] + job_info['id']
+        job_info['loc'] = '/tmp/' + job_info['model'] + str(job_info['id'])
         job_info['gpu_info'] = gpu_info
         job_info['exec_tm'] = time.time()
         self.job_executor.execute(job_info)
