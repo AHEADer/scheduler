@@ -118,7 +118,6 @@ class Scheduler:
             job_info['r_tm'] = remaining_tm
             job_info['priority'] = 0
             job_info['join2_tm'] = time.time()
-            job_info['wait_tm'] = job_info['join2_tm'] - job_info['cpt_time'] + job_info['wait_tm']
+            job_info['wait_tm'] = job_info['join2_tm'] - job_info['cpt_tm'] + job_info['wait_tm']
             priority = self.priority(job_info['wait_tm'], remaining_tm)
             heapq.heappush(self.job_queue, (priority, job_info))
-        pass
