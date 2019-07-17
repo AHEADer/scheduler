@@ -29,7 +29,7 @@ class Executor:
         cd = 'cd scheduler/models-1.11/official/resnet; '
         exec_cmd = gpu_pre + ' python cifar10_main.py --md=' + job_info['loc'] +\
                    ' -lr=' + str(job_info['hyparams'][0]) +\
-                   ' -bs=' + str(job_info['hyparams'][1]) +\
+                   ' -bs=' + str(int(job_info['hyparams'][1])) +\
                    ' -te=' + str(job_info['hyparams'][2]) +\
                    ' -status=' + str(job_info['status']) +\
                    ' -ni=' + job_info['gpu_info'][0] +\
