@@ -30,14 +30,6 @@ class Monitor:
         while True:
             current_connection, address = connection.accept()
             data = current_connection.recv(2048)
-            # return data format:
-            # {u'status': u'init',
-            # u'loc': u'/tmp/xxx',
-            # u'ab': 0,
-            # u'gpu_info': [None, u'-1'],
-            # u'init_f': [u'0.1', 7.0, 14.662548089536196, 18745.666989334175, 34186.61144087942, 0.07233045832141337],
-            # u'cpt_tm': 1563263109.7974925
-            # }
 
             job_return_info = binary_to_dict(data)
             # first release GPU resources
@@ -49,6 +41,7 @@ class Monitor:
                 learning_rate = features[0]
                 batch_size = 2**features[1]
 
+                job_info['id'] = job_return_info['id']
                 job_info = dict(model='resnet', init_f=features, wait_tm=wait_tm, cpt_tm=cpt_tm)
                 job_info['hyparams'] = [learning_rate, batch_size]
                 job_info['abnormal'] = 0

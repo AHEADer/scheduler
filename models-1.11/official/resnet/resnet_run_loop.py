@@ -542,6 +542,9 @@ def define_resnet_flags(resnet_size_choices=None):
   flags.DEFINE_string(name='wait_time', short_name='wt', default='0',
       help=flags_core.help_wrap('Time that has been waited'))
 
+  flags.DEFINE_string(name='job_id', short_name='jid', default=None,
+      help=flags_core.help_wrap('job id'))
+
   choice_kwargs = dict(
       name='resnet_size', short_name='rs', default='50',
       help=flags_core.help_wrap('The size of the ResNet model to use.'))

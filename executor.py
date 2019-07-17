@@ -36,7 +36,8 @@ class Executor:
                    ' -gi=' + str(job_info['gpu_info'][1]) +\
                    ' -server=ncrs:5555' +\
                    ' -et='+str(job_info['exec_tm']) +\
-                   ' -wt='+str(job_info['wait_tm'])
+                   ' -wt='+str(job_info['wait_tm']) +\
+                   ' -jid='+str(job_info['id'])
 
         cmd = ssh + '"' + source + conda + cd + exec_cmd + '"'
         print(cmd)
