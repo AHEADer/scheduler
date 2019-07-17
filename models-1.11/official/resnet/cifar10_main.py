@@ -279,7 +279,7 @@ def run_cifar(flags_obj):
   if flags_obj.status == 'init':
     # collect and plot, then connect server
     # show model_directory files and find events file
-    train_args = analyzer.training_args(train_file)
+    train_args = analyzer.training_args(train_file, int(flags_obj.bs))
     #TODO uptrend define to fill abnormal
     abnormal = 0
     '''
@@ -300,6 +300,7 @@ def run_cifar(flags_obj):
     # just save the data/evaluate
     # TODO evaluate model performance
     train_args = analyzer.training_args(train_file)
+    abnormal = 0
     sendback(flags_obj, train_args, eval_args, abnormal)
     pass
 
@@ -315,7 +316,7 @@ def sendback(flags_obj, train_args, eval_args, abnormal):
     message['gpu_info'] = (flags_obj.ni, flags_obj.gi)
     message['loc'] = flags_obj.md
     # temporarily no need of eval_args for prediction model
-    message['init_f'] = [flags_obj.lr, np.log2(flags_obj.bs)] + list(train_args)
+    message['init_f'] = [float(flags_obj.lr), np.log2(flags_obj.bs)] + list(train_args)
     # complete time
     message['cpt_tm'] = time.time()
     message['ab'] = abnormal

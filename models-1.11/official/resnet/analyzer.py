@@ -3,15 +3,15 @@ import scipy.optimize as optimize
 import scipy.stats as stats
 
 
-def train_data(train_file):
-    steps = []
+def train_data(train_file, batch_size):
+    epochs = []
     values = []
     for e in tf.train.summary_iterator(train_file):
         for v in e.summary.value:
             if v.tag == 'cross_entropy_1':
-                steps.append(e.step)
+                epochs.append(e.step*batch_size/50000)
                 values.append(v.simple_value)
-    return steps, values
+    return epochs, values
 
 
 def validate_data(validate_file):
@@ -31,8 +31,8 @@ def inv_func(x, a, b, c, d):
     return c/(a*x+b) + d
 
 
-def training_args(train_file):
-    x, y = train_data(train_file)
+def training_args(train_file, batch_size):
+    x, y = train_data(train_file, batch_size)
     a, b, c, d = optimize.curve_fit(inv_func, x, y)[0]
     return a, b, c, d
 
