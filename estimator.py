@@ -10,7 +10,6 @@ class Estimator:
     def resnet_predict(self, train_f, epsilon):
         alpha = self.resnet_alpha.predict([train_f])
         beta = self.resnet_theta.predict([train_f])
-        print(alpha, beta)
         for i in range(1, 1000):
             if stats.gamma.cdf(i, a=alpha, scale=beta) > 1-epsilon:
                 # TODO change (10-5) to a parameter for scheduler
