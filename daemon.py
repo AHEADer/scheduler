@@ -41,8 +41,8 @@ class Monitor:
                 learning_rate = features[0]
                 batch_size = 2**features[1]
 
-                job_info['id'] = job_return_info['id']
                 job_info = dict(model='resnet', init_f=features, wait_tm=wait_tm, cpt_tm=cpt_tm)
+                job_info['id'] = job_return_info['id']
                 job_info['hyparams'] = [learning_rate, batch_size]
                 job_info['abnormal'] = 0
                 # TODO make 5 be a parameter
