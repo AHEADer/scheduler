@@ -11,14 +11,14 @@ class Generator:
 
     def generate(self, job_num):
         # batch size is discrete
-        batch_size = [32, 64, 128, 256, 512, 1024, 2048, 4096]
+        batch_size = [32, 64, 128, 256, 512, 1024, 2048]
         # learning rate is continuous
         for i in range(job_num):
             lr = round(random.uniform(1, 0.01), 2)
             tm = time.time() + random.uniform(2, 30)
-            bs = batch_size[random.randrange(0,8)]
+            bs = batch_size[random.randrange(0, 7)]
             # TODO adjust/tune this number
-            epoch = 100
+            epoch = 5
             job = {
                 'id': i+1,
                 'model': 'resnet',
