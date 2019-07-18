@@ -41,7 +41,9 @@ class Executor:
         exec_cmd = exec_cmd + ' -jid=' + str(job_info['id'])
 
         cmd = ssh + '"' + source + conda + cd + exec_cmd + '"'
-        print(cmd)
+        with open('cmd.txt', 'a+') as f:
+            f.write(cmd)
+            f.close()
         # An example here:
         # ssh ncrd "source .zshrc; conda activate stable;
         # source ~/configure/server1; cd models/official/resnet;
