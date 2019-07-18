@@ -48,8 +48,8 @@ class Executor:
         # python cifar10_main.py --model_dir=/home/junda/large_bs"
 
         # create a new thread to execute the job
-        # new_job_thread = threading.Thread(target=self.exec_node, args=cmd)
-        # new_job_thread.start()
+        new_job_thread = threading.Thread(target=self.exec_node, args=cmd)
+        new_job_thread.start()
 
     @staticmethod
     def exec_node(cmd):

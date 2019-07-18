@@ -295,11 +295,11 @@ def run_cifar(flags_obj):
       # connect server and return the data
       sendback(flags_obj, train_args, eval_args, abnormal)
 
-    
   elif flags_obj.status == 'train':
     # just save the data/evaluate
     # TODO evaluate model performance
-    train_args = analyzer.training_args(train_file, int(flags_obj.bs))
+    # train_args = analyzer.training_args(train_file, int(flags_obj.bs))
+    train_args = []
     abnormal = 0
     sendback(flags_obj, train_args, eval_args, abnormal)
     pass
