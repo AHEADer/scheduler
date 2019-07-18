@@ -52,8 +52,11 @@ class Monitor:
                 # Then pass job to the queue, scheduler will do the fitting
                 self.a_scheduler.job_enqueue(job_info)
             else:
-                print('one job complete')
+                # print('one job complete')
                 print(job_return_info)
+                with open('complete.txt', 'a+') as f:
+                    f.write(str(job_return_info))
+                    f.close()
                 # This job is completed, can measure its performance
                 # TODO measure performance of a job
 

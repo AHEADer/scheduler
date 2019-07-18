@@ -64,6 +64,7 @@ class Scheduler:
         heapq.heapify(self.job_queue)
 
     def execute_job(self, job_info, gpu_info):
+        self.log_write(job_info)
         # job info from generator or init step
         wait_tm = time.time()
         if job_info['status'] == 'init':
@@ -102,6 +103,12 @@ class Scheduler:
 
     def init_enqueue(self, job_info):
         self.init_job_queue.put(job_info)
+
+    @staticmethod
+    def log_write(job_info):
+        with open('log.txt', 'a+') as f:
+            f.write(str(job_info))
+            f.close()
 
     def job_enqueue(self, job_info):
         # record current time

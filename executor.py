@@ -38,7 +38,7 @@ class Executor:
                    ' -et=' + str(job_info['exec_tm']) +\
                    ' -wt=' + str(job_info['wait_tm'])
 
-        exec_cmd = exec_cmd + ' -jid=' + job_info['id']
+        exec_cmd = exec_cmd + ' -jid=' + str(job_info['id'])
 
         cmd = ssh + '"' + source + conda + cd + exec_cmd + '"'
         print(cmd)
@@ -48,7 +48,7 @@ class Executor:
         # python cifar10_main.py --model_dir=/home/junda/large_bs"
 
         # create a new thread to execute the job
-        new_job_thread = threading.Thread(target=self.exec_node, args=cmd)
+        new_job_thread = threading.Thread(target=self.exec_node, args=(cmd, ))
         new_job_thread.start()
 
     @staticmethod

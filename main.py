@@ -6,8 +6,8 @@ from executor import Executor
 
 if __name__ == '__main__':
     E = Executor()
-    node_list = ['ncra', 'ncrb', 'ncrc', 'ncrd']
-    S = Scheduler(node_list, 2, E)
+    node_list = ['ncrd']
+    S = Scheduler(node_list, 3, E)
     G = Generator(S)
     G.generate(13)
     G.begin()
