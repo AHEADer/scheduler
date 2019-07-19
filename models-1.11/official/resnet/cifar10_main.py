@@ -323,6 +323,7 @@ def sendback(flags_obj, train_args, eval_args, abnormal):
     message['exec_tm'] = flags_obj.et
     message['wait_tm'] = float(flags_obj.wt)
     message['id'] = flags_obj.jid
+    message['te'] = flags_obj.te
     sock.sendall(dict_to_binary(message))
   finally:
     sock.close()

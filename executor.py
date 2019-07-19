@@ -41,7 +41,7 @@ class Executor:
         exec_cmd = exec_cmd + ' -jid=' + str(job_info['id'])
 
         cmd = ssh + '"' + source + conda + cd + exec_cmd + '"'
-        with open('cmd.txt', 'a+') as f:
+        with open('cmd.txt', 'a+', newline='\n') as f:
             f.write(cmd)
             f.close()
         # An example here:

@@ -18,7 +18,7 @@ class Generator:
             tm = time.time() + random.uniform(2, 30)
             bs = batch_size[random.randrange(0, 7)]
             # TODO adjust/tune this number
-            epoch = 5
+            epoch = 10
             job = {
                 'id': i+1,
                 'model': 'resnet',

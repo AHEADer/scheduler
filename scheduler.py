@@ -106,7 +106,7 @@ class Scheduler:
 
     @staticmethod
     def log_write(job_info):
-        with open('log.txt', 'a+') as f:
+        with open('log.txt', 'a+', newline='\n') as f:
             f.write(str(job_info))
             f.close()
 

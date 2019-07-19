@@ -54,7 +54,7 @@ class Monitor:
             else:
                 # print('one job complete')
                 print(job_return_info)
-                with open('complete.txt', 'a+') as f:
+                with open('complete.txt', 'a+', newline='\n') as f:
                     f.write(str(job_return_info))
                     f.close()
                 # This job is completed, can measure its performance
