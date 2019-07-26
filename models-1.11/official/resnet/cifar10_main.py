@@ -244,7 +244,7 @@ def define_cifar_flags():
                           model_dir='/tmp/cifar10_model',
                           resnet_size='32',
                           train_epochs=250,
-                          epochs_between_evals=10,
+                          epochs_between_evals=1,
                           batch_size=128)
 
 
