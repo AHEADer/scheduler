@@ -17,17 +17,17 @@ from src.helper.trainer import Trainer
 from src.helper.evaluator import Evaluator
 
 
-DATA_PATH = '/home/junda/cifar-10-batches-py'
-SAVE_PATH = '/home/junda/vgg19/'
+# DATA_PATH = '/home/junda/cifar-10-batches-py'
+# SAVE_PATH = '/home/junda/vgg19/'
 
 
 def get_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--data_path',
+    parser.add_argument('--data_path', type=str,
                         help='Specify data location')
 
-    parser.add_argument('--save_path',
+    parser.add_argument('--save_path', type=str,
                         help='Specify saved model location')
 
     parser.add_argument('--train', action='store_true',
@@ -52,7 +52,7 @@ def get_args():
 def train():
     FLAGS = get_args()
     train_data, valid_data = loader.load_cifar(
-        cifar_path=FLAGS.data_dir, batch_size=FLAGS.bsize, substract_mean=True)
+        cifar_path=FLAGS.data_path, batch_size=FLAGS.bsize, substract_mean=True)
 
     train_model = VGG_CIFAR10(
         n_channel=3, n_class=10, pre_trained_path=None,
