@@ -25,14 +25,24 @@ from src.helper.evaluator import Evaluator
 scheduler_op = None
 target_gpus = []
 
+
 def binary_to_dict(the_binary):
     jsn = the_binary.decode('utf-8')
     d = json.loads(jsn)
     return d
 
 
+def dict_to_binary(the_dict):
+    message = json.dumps(the_dict)
+    print(str)
+    return message.encode()
+
+
 def get_args():
     parser = argparse.ArgumentParser()
+
+    parser.add_argument('--id', type=str, default='',
+                        help='Job id')
 
     parser.add_argument('--port', type=int,
                         help='Listen port for scheduling message')
@@ -42,6 +52,12 @@ def get_args():
 
     parser.add_argument('--save_path', type=str,
                         help='Specify saved model location')
+
+    parser.add_argument('--gpus', type=str,
+                        help='Which GPUs this job occupies')
+
+    parser.add_argument('--saved_model', type=str, default='',
+                        help='Saved model location')
 
     parser.add_argument('--train', action='store_true',
                         help='Train the model')
@@ -83,18 +99,50 @@ def train():
     with tf.Session(config=config) as sess:
         writer = tf.compat.v1.summary.FileWriter(FLAGS.save_path)
         saver = tf.compat.v1.train.Saver()
+        if FLAGS.saved_model != '':
+            saver.restore(sess, FLAGS.saved_model)
+
         sess.run(tf.global_variables_initializer())
         writer.add_graph(sess.graph)
         for epoch_id in range(FLAGS.maxepoch):
             trainer.train_epoch(sess, keep_prob=FLAGS.keep_prob, summary_writer=writer)
             trainer.valid_epoch(sess, dataflow=valid_data, summary_writer=writer)
+
+            # connection part
+            msg = {}
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            server_address = ('0.0.0.0', 5555)
+            sock.connect(server_address)
+
             if scheduler_op == 'g' or 's':
                 saved_model = '{}vgg-cifar-epoch-{}'.format(FLAGS.save_path, epoch_id)
                 saver.save(sess, saved_model)
                 # generate command
-                config_command = '--train --port ' + str(FLAGS.port) + ' --data_path '
+                if scheduler_op == 'g':
+                    sch_gpus = FLAGS.gpus.split(',') + target_gpus
+                else:
+                    sch_gpus = FLAGS.gpus.split(',') - target_gpus
+
+                current_gpus = ','.join(sch_gpus)
+
+                config_command = '--train --port ' + str(FLAGS.port) + ' --data_path ' + str(FLAGS.data_path) +\
+                                 ' --saved_model ' + saved_model + ' --save_path ' + FLAGS.save_path + ' --lr ' +\
+                                 str(FLAGS.lr) + ' --bsize ' + str(FLAGS.bsize) + ' --keep_prob ' +\
+                                 str(FLAGS.keep_prob) + ' --maxepoch ' + str(FLAGS.maxepoch-epoch_id-1) +\
+                                 ' --gpus ' + current_gpus
                 # send command back to the scheduler
-                pass
+                msg['config'] = config_command
+                msg['id'] = FLAGS.id
+                msg['ep'] = epoch_id+1
+                msg['gpus'] = sch_gpus
+                sock.sendall(dict_to_binary(msg))
+                # leave the scheduler to restart
+                exit()
+            else:
+                msg['id'] = FLAGS.id
+                msg['ep'] = epoch_id+1
+                sock.sendall(dict_to_binary(msg))
+
             # saver.save(sess, '{}vgg-cifar-epoch-{}'.format(SAVE_PATH, epoch_id))
         saver.save(sess, '{}vgg-cifar-epoch-{}'.format(FLAGS.save_path, epoch_id))
 
@@ -136,6 +184,7 @@ def msg_handle(port):
             scheduler_op = 'g'
         elif msg['op'] == 's':
             scheduler_op = 's'
+        # target_gpus must be an array like ['3', '4']
         target_gpus = msg['gpus']
 
 
