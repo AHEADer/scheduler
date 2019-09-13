@@ -20,9 +20,9 @@ class cifar10vgg:
         self.weight_decay = 0.0005
         self.x_shape = [32,32,3]
 
-        self.model = self.build_model()
+        # self.model = self.build_model()
         if train:
-            self.model = self.train(self.model)
+            self.model = self.train()
         else:
             self.model.load_weights('cifar10vgg.h5')
 
@@ -142,9 +142,11 @@ class cifar10vgg:
             x = self.normalize_production(x)
         return self.model.predict(x,batch_size)
 
-    def train(self,model):
-        mirrored_strategy = tf.distribute.MirroredStrategy()
+    def train(self):
+        # mirrored_strategy = tf.distribute.MirroredStrategy()
+        mirrored_strategy = tf.contrib.distribute.MirroredStrategy()
         with mirrored_strategy.scope():
+            model = self.build_model()
             # training parameters
             batch_size = 128
             maxepoches = 250
