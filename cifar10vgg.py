@@ -189,12 +189,23 @@ class cifar10vgg:
         datagen.fit(x_train)
 
         # training process in a for loop with learning rate drop every 25 epoches.
-
+        '''
         historytemp = model.fit_generator(datagen.flow(x_train, y_train,
                                                        batch_size=batch_size),
                                           steps_per_epoch=x_train.shape[0] // batch_size,
                                           epochs=maxepoches,
                                           validation_data=(x_test, y_test), callbacks=[reduce_lr], verbose=2)
+        '''
+        for e in range(maxepoches):
+            print('Epoch', e)
+            batches = 0
+            for x_batch, y_batch in datagen.flow(x_train, y_train, batch_size=batch_size):
+                model.fit(x_batch, y_batch)
+                batches += 1
+                if batches >= len(x_train) / batch_size:
+                    # we need to break the loop by hand because
+                    # the generator loops indefinitely
+                    break
         model.save_weights('cifar10vgg.h5')
         return model
 
