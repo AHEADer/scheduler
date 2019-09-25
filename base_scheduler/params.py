@@ -1,0 +1,2 @@
+CLUSTER_NODES = ['0.0.0.0']
+GPU_PER_NODE = 8
