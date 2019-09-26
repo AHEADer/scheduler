@@ -1,11 +1,11 @@
 import threading
 import queue
-from .params import *
+
 import time
 import heapq
 import copy
-from .utils import *
-from .job import *
+from utils import *
+from job import *
 
 # from estimator import Estimator
 # from job import Job
@@ -21,7 +21,7 @@ from .job import *
 
 
 class Scheduler:
-    def __init__(self, cluster_nodes, gpu_per_nodes):
+    def __init__(self, cluster_nodes, gpu_per_nodes, daemon=None):
         # self.job_queue = []
         # self.gpus = [0, 0, 0, 0, 0, 0, 0, 0]
         # self.cluster_resource = self.cluster_init(node_list, gpu_per_node)
@@ -30,10 +30,13 @@ class Scheduler:
         # self.job_executor = job_executor
         # self.unpredicted_job = queue.Queue()
         # self.estimator = Estimator()
+        self.daemon = daemon
         self.init_job_queue = queue.Queue()
         self.resources = self._build_resource_dict(cluster_nodes, gpu_per_nodes)
         self.running_info = queue.Queue()
         self.running_jobs = {}
+        self.growing_jobs = []
+        self.shrinking_jobs = {}
         self.msg_handler = threading.Thread(target=self._msg_handle, args=())
         self.msg_handler.start()
 
@@ -42,15 +45,23 @@ class Scheduler:
             while not self.running_info.empty():
                 # TODO: below
                 # Detect if there are available GPUs
-                info = self.running_info.get()
-                self.update_running_info(info)
+                if self.allocate_gpu():
+                    info = self.running_info.get()
+                    self.update_running_info(info)
+                else:
+                    # currently no gpu can be allocated
+                    time.sleep(10)
+
             if self.init_job_queue.empty():
                 self.introspect()
+
+    def set_daemon(self, daemon):
+        self.daemon = daemon
 
     @staticmethod
     def _build_resource_dict(cluster_nodes, gpu_per_nodes):
         resource_dict = {}
-        gpus = [0 for _ in gpu_per_nodes]
+        gpus = [0] * gpu_per_nodes
         for node in cluster_nodes:
             resource_dict[node] = copy.deepcopy(gpus)
         return resource_dict
@@ -145,6 +156,24 @@ class Scheduler:
         job.status = 'growing'
         return 0
 
+    def gpu_shrink(self, job):
+        shrink_gpu_num = job.gpu_num/2
+
+        # TODO No multi node version
+        for n in job.gpus_loc.keys():
+            if len(job.gpus_loc[n]) >= shrink_gpu_num:
+                node = n
+                gpus = job.gpus_loc[n][:shrink_gpu_num]
+                job.gpus_loc[n] = job.gpus_loc[n][shrink_gpu_num:]
+                break
+        msg = {'type': 's',
+               'node': node,
+               'gpus': gpus
+               }
+        send_msg(job.address, msg)
+        job.status = 'shrinking'
+        return 0
+
     def get_running_jobs(self):
         _ = []
         for key in self.running_jobs.keys():
@@ -166,8 +195,44 @@ class Scheduler:
         return new_job
 
     def allocate_gpu(self):
-        return 0
+        free_dict = self.check_free_gpu()
+        if free_dict != {}:
+            return True
+        # check growing gpu and recall them
+        # TODO recall growing strategy is needed
+        if self.growing_jobs == {}:
+            # no growing jobs, which means cannot recall growing
+            # then we need to find jobs to shrink
+            # find jobs that is unlocked and have more than one GPU
+            job_sk_list = []
+            for job in self.running_jobs.keys():
+                if job.lock is True or job.gpu_num == 1:
+                    continue
+                else:
+                    job_sk_list.append(job)
+            if len(job_sk_list) == 0:
+                return False
+            else:
+                job_sk_list = sorted(job_sk_list, key=lambda item: item.gpu_num)
+                # notify to shrink but still tell new jobs that cannot run now
+                self.gpu_shrink(job_sk_list[0])
+                return False
+        else:
+            grow_list = []
+            for job_id in self.growing_jobs:
+                grow_list.append(self.running_jobs[job_id])
+            grow_list = sorted(grow_list, key=lambda item: item.grow_gpu_num)
+            self.recall_grow(grow_list[0])
+            return False
 
     def receive_running_info(self, info):
         self.running_info.put(info)
+
+    def recall_grow(self, job):
+
+        return
+
+    def recall_shrink(self):
+        return
+
 
