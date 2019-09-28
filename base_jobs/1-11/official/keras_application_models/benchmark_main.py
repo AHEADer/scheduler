@@ -24,7 +24,10 @@ from absl import flags
 import tensorflow as tf
 # pylint: enable=g-bad-import-order
 
+# information transfer
 import threading
+import socket
+import json
 
 from official.keras_application_models import dataset
 from official.keras_application_models import model_callbacks
@@ -47,6 +50,47 @@ MODELS = {
         "nasnetlarge": tf.keras.applications.NASNetLarge,
         "nasnetmobile": tf.keras.applications.NASNetMobile,
 }
+
+job_status = 'normal'
+node = ''
+gpus = []
+
+
+def binary_to_dict(the_binary):
+    jsn = the_binary.decode('utf-8')
+    d = json.loads(jsn)
+    return d
+
+
+def receive(server_ip, port):
+    # open a server and wait for job report
+    connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    connection.bind(('0.0.0.0', port))
+    connection.listen(10)
+    while True:
+        current_connection, address = connection.accept()
+        data = current_connection.recv(2048)
+        info = binary_to_dict(data)
+        job_status = info['type']
+        node = info['node']
+        gpus = info['gpus']
+
+
+def dict_to_binary(the_dict):
+    message = json.dumps(the_dict)
+    return message.encode()
+
+
+def send_msg(address, message):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    ip_address, port = address.split(':')
+    server_address = (ip_address, int(port))
+    sock.connect(server_address)
+    try:
+        sock.sendall(dict_to_binary(message))
+    finally:
+        sock.close()
 
 
 def run_keras_model_benchmark(_):
@@ -121,24 +165,32 @@ def run_keras_model_benchmark(_):
             test_id=FLAGS.benchmark_test_id)
 
     class LossHistory(tf.keras.callbacks.Callback):
-        def __init__(self):
-            self.count = 0
-
         def on_train_begin(self, logs={}):
-            self.losses = []
+            return
 
         def on_batch_end(self, batch, logs={}):
-            print("!!!!!!!!!!!!!!!!!!!!!!!!")
-            print(batch)
-            self.count += 1
-            print(self.count)
-            self.losses.append(logs.get('loss'))
+            if batch % 100 == 0:
+                pass
+            if job_status == 'g':
+                # growing is needed
+                msg = {}
+                gpus_loc = {}
+                new_gpus_list = gpus + FLAGS.gpus_list
+                gpus_loc['0.0.0.0'] = new_gpus_list
+                msg['gpus_loc'] = gpus_loc
+                msg['id'] = FLAGS.id
+                msg['type'] = 'g'
+                send_msg(FLAGS.server_address, msg)
+                # stop the training
+                pass
+            self.model.stop_training = True
 
     # Create callbacks that log metric values about the training and evaluation
     callbacks = model_callbacks.get_model_callbacks(
             FLAGS.callbacks,
             batch_size=FLAGS.batch_size,
             metric_logger=benchmark_logger)
+    callbacks.append(LossHistory())
     # Train and evaluate the model
     history = model.fit(
             train_dataset,
@@ -190,11 +242,6 @@ def define_keras_benchmark_flags():
                     "1000."))
 
     flags.DEFINE_integer(
-            name="port", default=8888,
-            help=flags_core.help_wrap(
-                    "The port that receive message from the scheduler"))
-
-    flags.DEFINE_integer(
             name="num_eval_images", default=50,
             help=flags_core.help_wrap(
                     "The number of synthetic images for evaluation. The default value is "
@@ -219,6 +266,37 @@ def define_keras_benchmark_flags():
                     "A list of (case insensitive) strings to specify the names of "
                     "callbacks. For example: `--callbacks ExamplesPerSecondCallback,"
                     "LoggingMetricCallback`"))
+
+    # below is for scheduler
+    flags.DEFINE_integer(
+        name="port", default=8888,
+        help=flags_core.help_wrap(
+            "The port that receive message from the scheduler"))
+
+    flags.DEFINE_list(
+        name="gpus_list",
+        default=[],
+        help=flags_core.help_wrap(
+            'GPUs that this job will occupy'))
+
+    # TODO combine node and gpu info into a flag
+    flags.DEFINE_string(
+        name="node",
+        default='',
+        help=flags_core.help_wrap(
+            'Which Node to run'))
+
+    flags.DEFINE_string(
+        name="server_address",
+        default='',
+        help=flags_core.help_wrap(
+            'Monitor server address'))
+
+    flags.DEFINE_string(
+        name="id",
+        default='',
+        help=flags_core.help_wrap(
+            'Monitor server address'))
 
     @flags.multi_flags_validator(
             ["eager", "dist_strat"],
