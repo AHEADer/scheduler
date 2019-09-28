@@ -14,25 +14,21 @@ class Generator:
     def generate(self, job_num):
         # batch size is discrete
         batch_size = [32, 64, 128, 256, 512, 1024, 2048]
+        start = 8888
         # learning rate is continuous
         for i in range(job_num):
-            lr = round(random.uniform(1, 0.01), 2)
-            tm = time.time() + random.uniform(2, 30)
+            id = str(i+1)
+            tm = time.time() + random.uniform(0, job_num * 90)
             bs = batch_size[random.randrange(0, 7)]
+            model = self.models_list[random.randrange(0, 12)]
             # TODO adjust/tune this number
             epoch = 10
             job = {
-                'id': i+1,
-                'model': 'resnet',
-                'status': 'normal',
-                'hyparams': [lr, bs, epoch],
-                'join_tm': tm,
-                'abnormal': False,
-                'init_f': None,
-                'r_tm': np.Inf,
-                'join2_tm': 0,
-                'wait_tm': 0
+                'id': id,
+                'model': model,
+                'address': 'localhost:' + str(start)
             }
+            start += 1
             self.jobs_list.append([job, tm])
         self.jobs_list = sorted(self.jobs_list, key=lambda ins: ins[1])
             # pprint(self.jobs_list)
@@ -46,4 +42,9 @@ class Generator:
             last_tm = each[1]
             if remain > 0:
                 time.sleep(remain)
-            self.scheduler.init_enqueue(each[0])
+            self.scheduler.receive_running_info(each[0])
+
+if __name__ == '__main__':
+    G = Generator('haha')
+    G.generate(10)
+    G.begin()
