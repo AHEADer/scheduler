@@ -28,6 +28,9 @@ import tensorflow as tf
 import threading
 import socket
 import json
+import sys
+
+sys.path.insert(0, '../../')
 
 from official.keras_application_models import dataset
 from official.keras_application_models import model_callbacks
@@ -99,7 +102,8 @@ def run_keras_model_benchmark(_):
     if FLAGS.model not in MODELS.keys():
         raise AssertionError("The --model command line argument should "
                                                  "be a key in the `MODELS` dictionary.")
-
+    # print(FLAGS.gpus_list)
+    # exit()
     # Check if eager execution is enabled
     if FLAGS.eager:
         tf.logging.info("Eager execution is enabled...")
@@ -164,26 +168,32 @@ def run_keras_model_benchmark(_):
             run_params=run_params,
             test_id=FLAGS.benchmark_test_id)
 
+    training_flags = 0
+
     class LossHistory(tf.keras.callbacks.Callback):
         def on_train_begin(self, logs={}):
             return
 
         def on_batch_end(self, batch, logs={}):
-            if batch % 100 == 0:
+            if batch % 29 == 0:
+                # self.model.stop_training = True
                 pass
             if job_status == 'g':
                 # growing is needed
                 msg = {}
                 gpus_loc = {}
-                new_gpus_list = gpus + FLAGS.gpus_list
+                flags_gpu_list = [int(i) for i in FLAGS.gpus_list]
+                new_gpus_list = gpus + flags_gpu_list
                 gpus_loc['0.0.0.0'] = new_gpus_list
                 msg['gpus_loc'] = gpus_loc
                 msg['id'] = FLAGS.id
                 msg['type'] = 'g'
                 send_msg(FLAGS.server_address, msg)
+                training_flags = 1
+                self.model.stop_training = True
                 # stop the training
                 pass
-            self.model.stop_training = True
+            #
 
     # Create callbacks that log metric values about the training and evaluation
     callbacks = model_callbacks.get_model_callbacks(
@@ -201,6 +211,7 @@ def run_keras_model_benchmark(_):
             validation_steps=int(np.ceil(FLAGS.num_eval_images / FLAGS.batch_size))
     )
 
+    ''' No need for evaluation part
     tf.logging.info("Logging the evaluation results...")
     for epoch in range(FLAGS.train_epochs):
         eval_results = {
@@ -210,6 +221,7 @@ def run_keras_model_benchmark(_):
                         FLAGS.num_eval_images/FLAGS.batch_size)
         }
         benchmark_logger.log_evaluation_result(eval_results)
+    '''
 
     # Clear the session explicitly to avoid session delete error
     tf.keras.backend.clear_session()
