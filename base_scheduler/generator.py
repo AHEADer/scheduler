@@ -6,6 +6,8 @@ from pprint import pprint
 
 class Generator:
     def __init__(self, a_scheduler):
+        self.models_list = ['vgg16', 'vgg19', 'inceptionv3', 'xception', 'resnet50', 'inceptionresnetv2',
+                            'mobilenet', 'densenet121', 'densenet169', 'densenet201', 'nasnetlarge', 'nasnetmobile']
         self.jobs_list = []
         self.scheduler = a_scheduler
 

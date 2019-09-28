@@ -14,7 +14,8 @@ class Executor:
         exec_cmd = self.combine_cmd(' ', self.gpu_cmd(job.gpus_loc[job.node]), py)
         combine = self.combine_cmd(';', source, cd, exec_cmd)
         final_cmd = ssh + ' "' + combine + '"'
-        os.system(final_cmd)
+        print(final_cmd)
+        # os.system(final_cmd)
 
     @staticmethod
     def gpu_cmd(gpu_list):
@@ -29,7 +30,8 @@ class Executor:
         num_gpus = '-ng ' + str(len(job.gpus_loc[job.node]))
         id = '--id ' + job.id
         port = '--port ' + job.address.split(':')[1]
-        gpus_list = '--gpus_list ' + str(job.gpus_loc[job.node])
+        list_str = ','.join(str(i) for i in job.gpus_loc[job.node])
+        gpus_list = '--gpus_list ' + list_str
         node = '--node ' + job.node
         server_address = '--server_address ' + 'localhost:1080'
         other = '--num_train_images 50000 --train_epochs 10 --num_eval_images 10000'
@@ -63,5 +65,5 @@ if __name__ == '__main__':
     job.dict_store(construct_dict)
     from pprint import pprint
     pprint(vars(job))
-    # E = Executor()
-    # print(E.exec(job))
+    E = Executor()
+    E.exec(job)
