@@ -1,9 +1,32 @@
+from utils import *
+
+
 class Daemon:
     def __init__(self, scheduler=None):
         self.scheduler = scheduler
+        self.msg_handler = threading.Thread(target=self.receive, args=())
+        self.msg_handler.start()
 
     def set_scheduler(self, scheduler):
         self.scheduler = scheduler
+
+    def receive(self):
+        # open a server and wait for job report
+        connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        connection.bind(('0.0.0.0', 1080))
+        connection.listen(10)
+        while True:
+            current_connection, address = connection.accept()
+            data = current_connection.recv(2048)
+            print("receive a job")
+            info = binary_to_dict(data)
+            if info['type'] == 'g':
+                self.receive_grow(info)
+            elif info['type'] == 's':
+                self.receive_shrink(info)
+            elif info['type'] == 'e':
+                self.receive_end(info)
 
     # scheduler part begin
     def ask_grow(self):
@@ -27,16 +50,20 @@ class Daemon:
     # scheduler part end
 
     # job part begin
-    def receive_grow(self):
+    def receive_grow(self, info):
+        print(info)
+        self.scheduler.grow_ack(info)
         return
 
     def receive_recall_grow(self):
         return
 
-    def receive_shrink(self):
+    def receive_shrink(self, info):
+        print(info)
         return
 
-    def receive_end(self):
+    def receive_end(self, info):
+        print(info)
         return
 
     # job part end

@@ -84,6 +84,7 @@ class Scheduler:
         Args:
         Return:
         """
+        print('introspect start')
         jobs = self.get_running_jobs()
         if len(jobs) == 0:
             return
@@ -156,6 +157,14 @@ class Scheduler:
         job.status = 'growing'
         return 0
 
+    def grow_ack(self, info):
+        # make gpus occupied
+        for key in info['gpus_loc']:
+            for each in info['gpus_loc'][key]:
+                self.resources[key][each] = 1
+        self.growing_jobs.append(info['id'])
+        return
+
     def gpu_shrink(self, job):
         shrink_gpu_num = job.gpu_num/2
 
@@ -186,7 +195,7 @@ class Scheduler:
         else:
             new_job = self.generate_new_job_by_info(info)
             self.running_jobs[info['id']] = new_job
-            self.allocate_gpu()
+
 
     @staticmethod
     def generate_new_job_by_info(info):

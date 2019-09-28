@@ -1,11 +1,11 @@
 class Job:
     id = ''
-    # init set larger
+    model = ''
     ep_tm = 0
-    lock = False
+    lock = True
     gpu_util = 0
     gpu_num = 0
-    status = 'norm'
+    status = 'normal'
     grow_gpus = []
     grow_gpu_num = 0
     grow_node = ''
@@ -15,10 +15,11 @@ class Job:
 
     def dict_store(self, job_info):
         self.id = job_info['id']
-        self.ep_tm = job_info['ep_tm']
-        self.lock = job_info['lock']
-        self.gpu_util = job_info['gpu_util']
-        self.gpu_num = job_info['gpu_num']
+        self.model = job_info['model']
+        self.gpus_loc = job_info['gpus_loc']
+        self.address = job_info['address']
+        self.node = next(iter(self.gpus_loc))
+        self.gpu_num = len(self.gpus_loc[self.node])
 
 
 if __name__ == '__main__':
