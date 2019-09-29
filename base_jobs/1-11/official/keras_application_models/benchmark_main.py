@@ -93,6 +93,8 @@ def send_msg(address, message):
     sock.connect(server_address)
     try:
         sock.sendall(dict_to_binary(message))
+    except:
+        print(message)
     finally:
         sock.close()
 
@@ -189,6 +191,8 @@ def run_keras_model_benchmark(_):
                 msg['id'] = FLAGS.id
                 msg['status'] = 'un'
                 msg['ep_tm'] = FLAGS.num_train_images * hundred / (FLAGS.batch_size * 100)
+                print(FLAGS.server_address)
+                print('-----------------------------')
                 send_msg(FLAGS.server_address, msg)
 
             if job_status == 'g':
@@ -241,6 +245,7 @@ def run_keras_model_benchmark(_):
     # Now end the training send back message
     msg = {}
     msg['status'] = 'e'
+    msg['id'] = FLAGS.id
 
     send_msg(FLAGS.server_address, msg)
     global exit_code

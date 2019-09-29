@@ -22,7 +22,7 @@ class Generator:
             bs = batch_size[random.randrange(0, 7)]
             model = self.models_list[random.randrange(0, 12)]
             # TODO adjust/tune this number
-            epoch = 2
+            epoch = 1
             job = {
                 'id': id,
                 'model': model,

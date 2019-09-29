@@ -1,10 +1,13 @@
-from utils import *
+from utils import binary_to_dict
 from logger import log_print
+import socket
+import threading
+import json
 
 class Daemon:
     def __init__(self, scheduler=None):
         self.scheduler = scheduler
-        self.msg_handler = threading.Thread(target=self.receive, args=(), daemon=True)
+        self.msg_handler = threading.Thread(target=self.receive, args=())
         self.msg_handler.start()
 
     def set_scheduler(self, scheduler):
@@ -15,7 +18,7 @@ class Daemon:
         connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         connection.bind(('localhost', 1080))
-        connection.listen(10)
+        connection.listen(20)
         while True:
             current_connection, address = connection.accept()
             data = current_connection.recv(2048)

@@ -177,7 +177,7 @@ class Scheduler:
         else:
             job.gpus_loc[node] = gpus
         # Notify this job
-        msg = {'type': 'g',
+        msg = {'status': 'g',
                'node': node,
                'gpus': gpus
                }
@@ -204,7 +204,7 @@ class Scheduler:
                 gpus = job.gpus_loc[n][:shrink_gpu_num]
                 job.gpus_loc[n] = job.gpus_loc[n][shrink_gpu_num:]
                 break
-        msg = {'type': 's',
+        msg = {'status': 's',
                'node': node,
                'gpus': gpus
                }
