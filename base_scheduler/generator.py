@@ -28,7 +28,7 @@ class Generator:
                 # n means normal here
                 'status': 'n',
                 'address': 'localhost:' + str(start),
-                'epoch': 10
+                'ep': 8
             }
             start += 1
             self.jobs_list.append([job, tm])

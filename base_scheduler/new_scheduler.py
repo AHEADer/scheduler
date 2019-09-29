@@ -106,7 +106,7 @@ class Scheduler:
                 # utilization
                 if job.gpu_num == 1:
                     if self.cal_gpu_util(job) > 0.5:
-                        schedule_jobs.append(job)
+                        schedule_jobs.append(job.id)
                 elif self.cal_gpu_util(job) * job.gpu_num > job.gpu_num - 1:
                     schedule_jobs.append(job.id)
             else:
