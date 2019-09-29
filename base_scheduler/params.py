@@ -1,2 +1,2 @@
-CLUSTER_NODES = ['0.0.0.0']
+CLUSTER_NODES = ['localhost']
 GPU_PER_NODE = 8

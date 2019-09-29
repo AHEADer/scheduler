@@ -1,5 +1,6 @@
 import os
 from job import Job
+import threading
 
 
 class Executor:
@@ -14,8 +15,14 @@ class Executor:
         exec_cmd = self.combine_cmd(' ', self.gpu_cmd(job.gpus_loc[job.node]), py)
         combine = self.combine_cmd(';', source, cd, exec_cmd)
         final_cmd = ssh + ' "' + combine + '"'
-        print(final_cmd)
+        # print(final_cmd)
+        new_job_thread = threading.Thread(target=self.exec_cmd, args=(final_cmd, ))
+        new_job_thread.start()
         # os.system(final_cmd)
+
+    @staticmethod
+    def exec_cmd(cmd):
+        os.system(cmd)
 
     @staticmethod
     def gpu_cmd(gpu_list):

@@ -86,7 +86,7 @@ class Scheduler:
         Args:
         Return:
         """
-        print('introspect start')
+        # print('introspect start')
         jobs = self.get_running_jobs()
         if len(jobs) == 0:
             return
@@ -132,6 +132,7 @@ class Scheduler:
             for gpu in self.resources[node]:
                 if gpu == 0:
                     node_list.append(number)
+                number += 1
             if len(node_list) >= gpu_num:
                 for i in range(gpu_num):
                     if type == 'g':
@@ -195,13 +196,13 @@ class Scheduler:
         if info['status'] == 'e':
             del self.running_jobs[info['id']]
         elif info['status'] == 'n':
-            new_job = self.generate_new_job_by_info(info)
-            # get one GPU for it to run
-            gpu_tu = self.get_gpus(1, 'n')
-            new_job.gpus_loc[gpu_tu[0]] = gpu_tu[1]
-            self.running_jobs[info['id']] = new_job
-            print('exec job')
-            self.E.exec(new_job)
+        	gpu_tu = self.get_gpus(1, 'n')
+        	info['gpus_loc'] = {gpu_tu[0]: gpu_tu[1]}
+        	new_job = self.generate_new_job_by_info(info)
+        	# get one GPU for it to run
+        	self.running_jobs[info['id']] = new_job
+        	print('exec job')
+        	self.E.exec(new_job)
 
 
 
@@ -238,6 +239,8 @@ class Scheduler:
             grow_list = []
             for job_id in self.growing_jobs:
                 grow_list.append(self.running_jobs[job_id])
+            if len(grow_list) == 0:
+            	return False
             grow_list = sorted(grow_list, key=lambda item: item.grow_gpu_num)
             self.recall_grow(grow_list[0])
             return False
