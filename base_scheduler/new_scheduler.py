@@ -6,6 +6,7 @@ import heapq
 import copy
 from utils import *
 from job import *
+from executor import Executor
 
 # from estimator import Estimator
 # from job import Job
@@ -30,6 +31,7 @@ class Scheduler:
         # self.job_executor = job_executor
         # self.unpredicted_job = queue.Queue()
         # self.estimator = Estimator()
+        self.E = Executor()
         self.daemon = daemon
         self.init_job_queue = queue.Queue()
         self.resources = self._build_resource_dict(cluster_nodes, gpu_per_nodes)
@@ -190,11 +192,17 @@ class Scheduler:
         return _
 
     def update_running_info(self, info):
-        if info['status'] == 'end':
+        if info['status'] == 'e':
             del self.running_jobs[info['id']]
-        else:
+        elif info['status'] == 'n':
             new_job = self.generate_new_job_by_info(info)
+            # get one GPU for it to run
+            gpu_tu = self.get_gpus(1, 'n')
+            new_job.gpus_loc[gpu_tu[0]] = gpu_tu[1]
             self.running_jobs[info['id']] = new_job
+            print('exec job')
+            self.E.exec(new_job)
+
 
 
     @staticmethod

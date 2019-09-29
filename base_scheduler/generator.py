@@ -11,14 +11,14 @@ class Generator:
         self.jobs_list = []
         self.scheduler = a_scheduler
 
-    def generate(self, job_num):
+    def generate(self, job_num, span):
         # batch size is discrete
         batch_size = [32, 64, 128, 256, 512, 1024, 2048]
         start = 8888
         # learning rate is continuous
         for i in range(job_num):
             id = str(i+1)
-            tm = time.time() + random.uniform(0, job_num * 90)
+            tm = time.time() + random.uniform(0, span)
             bs = batch_size[random.randrange(0, 7)]
             model = self.models_list[random.randrange(0, 12)]
             # TODO adjust/tune this number
@@ -26,12 +26,13 @@ class Generator:
             job = {
                 'id': id,
                 'model': model,
+                # n means normal here
+                'status': 'n',
                 'address': 'localhost:' + str(start)
             }
             start += 1
             self.jobs_list.append([job, tm])
         self.jobs_list = sorted(self.jobs_list, key=lambda ins: ins[1])
-            # pprint(self.jobs_list)
 
     def begin(self):
         print('generator begins!')
@@ -43,6 +44,7 @@ class Generator:
             if remain > 0:
                 time.sleep(remain)
             self.scheduler.receive_running_info(each[0])
+
 
 if __name__ == '__main__':
     G = Generator('haha')

@@ -14,7 +14,7 @@ class Daemon:
         # open a server and wait for job report
         connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        connection.bind(('0.0.0.0', 1080))
+        connection.bind(('localhost', 1080))
         connection.listen(10)
         while True:
             current_connection, address = connection.accept()

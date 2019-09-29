@@ -5,7 +5,7 @@ class Job:
     lock = True
     gpu_util = 0
     gpu_num = 0
-    status = 'normal'
+    status = 'n'
     grow_gpus = []
     grow_gpu_num = 0
     grow_node = ''
@@ -14,6 +14,7 @@ class Job:
     address = ''
 
     def dict_store(self, job_info):
+        self.status = job_info['status']
         self.id = job_info['id']
         self.model = job_info['model']
         self.gpus_loc = job_info['gpus_loc']
