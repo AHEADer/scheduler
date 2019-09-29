@@ -8,6 +8,7 @@ from utils import *
 from job import *
 from executor import Executor
 import nvidia_smi
+from logger import log_print
 
 # from estimator import Estimator
 # from job import Job
@@ -113,15 +114,15 @@ class Scheduler:
 
         # sort job by running time per epoch
         schedule_jobs = sorted(schedule_jobs, key=lambda item: item.ep_tm)
-        if len(schedule_jobs) != 0:
-            print('try to introspect jobs')
+        # if len(schedule_jobs) != 0:
+        #    print('try to introspect jobs')
         for picked_job in schedule_jobs:
             if picked_job.gpu_num <= single_node_max:
                 # allocate GPU to this job
                 # TODO need to judge whether this job's gpu and allocated gpu in same node
                 gpus_loc = self.get_gpus(picked_job.gpu_num, 'g')
                 if gpus_loc[0] is None:
-                    print('Error when allocating GPUs...')
+                    log_print('scheduler.txt', 'Error when allocating GPUs, job id: ' + picked_job.id)
                 self.gpu_grow(picked_job, gpus_loc)
                 available_nodes = self.check_free_gpu()
                 single_node_max = max([len(available_nodes[l]) for l in available_nodes.keys()])
@@ -229,7 +230,7 @@ class Scheduler:
             self.E.exec(new_job)
 
     def unlock(self, info):
-        print('----unlock job %s' % info['id'])
+        log_print('scheduler.txt', '----unlock job ' + info['id'])
         self.running_jobs[info['id']].lock = False
         self.running_jobs[info['ep_tm']].lock = info['ep_tm']
 

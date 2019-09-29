@@ -75,6 +75,7 @@ def receive(server_ip, port):
         current_connection, address = connection.accept()
         data = current_connection.recv(2048)
         info = binary_to_dict(data)
+        global job_status, node, gpus
         job_status = info['status']
         node = info['node']
         gpus = info['gpus']

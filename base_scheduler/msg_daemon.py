@@ -1,5 +1,5 @@
 from utils import *
-
+from logger import log_print
 
 class Daemon:
     def __init__(self, scheduler=None):
@@ -16,11 +16,12 @@ class Daemon:
         connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         connection.bind(('localhost', 1080))
         connection.listen(10)
+        log_print('daemon.txt', 'daemon start')
         while True:
             current_connection, address = connection.accept()
             data = current_connection.recv(2048)
-            print("receive a job")
             info = binary_to_dict(data)
+            log_print('daemon.txt', 'receive a job, id = ' + info['id'])
             if info['status'] == 'g':
                 self.receive_grow(info)
             elif info['status'] == 's':
