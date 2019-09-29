@@ -1,7 +1,7 @@
 import os
 from job import Job
 import threading
-
+from logger import log_print
 
 class Executor:
     def __init__(self):
@@ -15,8 +15,9 @@ class Executor:
         exec_cmd = self.combine_cmd(' ', self.gpu_cmd(job.gpus_loc[job.node]), py)
         combine = self.combine_cmd(';', source, cd, exec_cmd)
         final_cmd = ssh + ' "' + combine + '"'
+        log_print('cmd.txt', final_cmd)
         # print(final_cmd)
-        new_job_thread = threading.Thread(target=self.exec_cmd, args=(final_cmd, ))
+        new_job_thread = threading.Thread(target=self.exec_cmd, args=(final_cmd, ), daemon=True)
         new_job_thread.start()
         # os.system(final_cmd)
 
@@ -41,7 +42,7 @@ class Executor:
         gpus_list = '--gpus_list ' + list_str
         node = '--node ' + job.node
         server_address = '--server_address ' + 'localhost:1080'
-        other = '--num_train_images 50000 --train_epochs 10 --num_eval_images 10000'
+        other = '--num_train_images 5000 --train_epochs 10 --num_eval_images 1000'
         return self.combine_cmd(' ', base, model, dist, num_gpus, id, port, gpus_list, node, server_address, other)
 
     @staticmethod

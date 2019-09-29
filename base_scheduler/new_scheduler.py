@@ -183,6 +183,7 @@ class Scheduler:
                }
         send_msg(job.address, msg)
         job.status = 'growing'
+        log_print('scheduler.txt', 'job ' + job.id + ' is growing')
         return 0
 
     def grow_ack(self, info):
@@ -232,7 +233,17 @@ class Scheduler:
     def unlock(self, info):
         log_print('scheduler.txt', '----unlock job ' + info['id'])
         self.running_jobs[info['id']].lock = False
-        self.running_jobs[info['ep_tm']].lock = info['ep_tm']
+        self.running_jobs[info['id']].ep_tm = info['ep_tm']
+
+    def end(self, info):
+        log_print('scheduler.txt', '----end job ' + info['id'])
+        self.release_gpu(self.running_jobs[info['id']])
+        del self.running_jobs[info['id']]
+
+    def release_gpu(self, job):
+        for node in job.gpus_loc.keys():
+            for each in job.gpus_loc[node]:
+                self.resources[node][each] = 0
 
     @staticmethod
     def generate_new_job_by_info(info):

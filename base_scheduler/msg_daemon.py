@@ -4,7 +4,7 @@ from logger import log_print
 class Daemon:
     def __init__(self, scheduler=None):
         self.scheduler = scheduler
-        self.msg_handler = threading.Thread(target=self.receive, args=())
+        self.msg_handler = threading.Thread(target=self.receive, args=(), daemon=True)
         self.msg_handler.start()
 
     def set_scheduler(self, scheduler):
@@ -16,7 +16,6 @@ class Daemon:
         connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         connection.bind(('localhost', 1080))
         connection.listen(10)
-        log_print('daemon.txt', 'daemon start')
         while True:
             current_connection, address = connection.accept()
             data = current_connection.recv(2048)
@@ -66,9 +65,10 @@ class Daemon:
         return
 
     def receive_end(self, info):
-        print(info)
+        log_print('daemon.txt', 'end job id: ' + info['id'])
         return
 
     def unlock(self, info):
+        log_print('daemon.txt', 'unlock job id: ' + info['id'])
         self.scheduler.unlock(info)
     # job part end

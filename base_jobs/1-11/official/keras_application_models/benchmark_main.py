@@ -57,7 +57,7 @@ MODELS = {
 job_status = 'normal'
 node = ''
 gpus = []
-
+exit_code = False
 
 def binary_to_dict(the_binary):
     jsn = the_binary.decode('utf-8')
@@ -71,7 +71,7 @@ def receive(server_ip, port):
     connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     connection.bind((server_ip, port))
     connection.listen(10)
-    while True:
+    while not exit_code:
         current_connection, address = connection.accept()
         data = current_connection.recv(2048)
         info = binary_to_dict(data)
@@ -98,7 +98,8 @@ def send_msg(address, message):
 
 
 def run_keras_model_benchmark(_):
-    new_job_thread = threading.Thread(target=receive, args=(FLAGS.server_address.split(':')[0], FLAGS.port,))
+    new_job_thread = threading.Thread(target=receive, 
+        args=(FLAGS.server_address.split(':')[0], FLAGS.port,), daemon=True)
     new_job_thread.start()
     """Run the benchmark on keras model."""
     # Ensure a valid model name was supplied via command line argument
@@ -196,7 +197,7 @@ def run_keras_model_benchmark(_):
                 gpus_loc = {}
                 flags_gpu_list = [int(i) for i in FLAGS.gpus_list]
                 new_gpus_list = gpus + flags_gpu_list
-                gpus_loc['0.0.0.0'] = new_gpus_list
+                gpus_loc['localhost'] = new_gpus_list
                 msg['gpus_loc'] = gpus_loc
                 msg['id'] = FLAGS.id
                 msg['status'] = 'g'
@@ -242,6 +243,8 @@ def run_keras_model_benchmark(_):
     msg['status'] = 'e'
 
     send_msg(FLAGS.server_address, msg)
+    global exit_code
+    exit_code = True
 
 
 def define_keras_benchmark_flags():
