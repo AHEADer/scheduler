@@ -58,6 +58,8 @@ job_status = 'normal'
 node = ''
 gpus = []
 exit_code = False
+training_flags = 0
+have_trained = 0
 
 def binary_to_dict(the_binary):
     jsn = the_binary.decode('utf-8')
@@ -174,7 +176,6 @@ def run_keras_model_benchmark(_):
             run_params=run_params,
             test_id=FLAGS.benchmark_test_id)
 
-    training_flags = 0
 
     class LossHistory(tf.keras.callbacks.Callback):
         def __init__(self):
@@ -183,34 +184,26 @@ def run_keras_model_benchmark(_):
         def on_train_begin(self, logs={}):
             return
 
+        def on_epoch_end(self, epoch, logs={}):
+            if job_status == 'g':
+                global training_flags, have_trained
+                training_flags = 1
+                have_trained = epoch + 1
+                self.model.stop_training = True
+
         def on_batch_end(self, batch, logs={}):
-            if batch == 99:
+            if batch == 49:
                 hundred = time.time() - self.start
                 # calculate the speed and unlock job
                 msg = {}
                 msg['id'] = FLAGS.id
                 msg['status'] = 'un'
-                msg['ep_tm'] = FLAGS.num_train_images * hundred / (FLAGS.batch_size * 100)
+                msg['ep_tm'] = FLAGS.num_train_images * hundred / (FLAGS.batch_size * 50)
                 print(FLAGS.server_address)
                 print('-----------------------------')
                 send_msg(FLAGS.server_address, msg)
 
-            if job_status == 'g':
-                # growing is needed
-                msg = {}
-                gpus_loc = {}
-                flags_gpu_list = [int(i) for i in FLAGS.gpus_list]
-                new_gpus_list = gpus + flags_gpu_list
-                gpus_loc['localhost'] = new_gpus_list
-                msg['gpus_loc'] = gpus_loc
-                msg['id'] = FLAGS.id
-                msg['status'] = 'g'
-                send_msg(FLAGS.server_address, msg)
-                training_flags = 1
-                self.model.stop_training = True
-                # stop the training
-                pass
-            #
+
 
     # Create callbacks that log metric values about the training and evaluation
     callbacks = model_callbacks.get_model_callbacks(
@@ -243,11 +236,25 @@ def run_keras_model_benchmark(_):
     # Clear the session explicitly to avoid session delete error
     tf.keras.backend.clear_session()
     # Now end the training send back message
-    msg = {}
-    msg['status'] = 'e'
-    msg['id'] = FLAGS.id
+    if training_flags == 0:
+        msg = {}
+        msg['status'] = 'e'
+        msg['id'] = FLAGS.id
+        send_msg(FLAGS.server_address, msg)
+    else:
+        # ask the scheduler to re-run
+        # growing is needed
+        msg = {}
+        gpus_loc = {}
+        flags_gpu_list = [int(i) for i in FLAGS.gpus_list]
+        new_gpus_list = gpus + flags_gpu_list
+        gpus_loc['localhost'] = new_gpus_list
+        msg['gpus_loc'] = gpus_loc
+        msg['id'] = FLAGS.id
+        msg['status'] = 'g'
+        msg['ep'] = FLAGS.train_epochs - have_trained
+        send_msg(FLAGS.server_address, msg)
 
-    send_msg(FLAGS.server_address, msg)
     global exit_code
     exit_code = True
 

@@ -18,7 +18,7 @@ class Daemon:
         connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         connection.bind(('localhost', 1080))
-        connection.listen(20)
+        connection.listen(50)
         while True:
             current_connection, address = connection.accept()
             data = current_connection.recv(2048)
@@ -56,7 +56,7 @@ class Daemon:
 
     # job part begin
     def receive_grow(self, info):
-        print(info)
+        # print(info)
         self.scheduler.grow_ack(info)
         return
 

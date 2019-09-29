@@ -22,13 +22,13 @@ class Generator:
             bs = batch_size[random.randrange(0, 7)]
             model = self.models_list[random.randrange(0, 12)]
             # TODO adjust/tune this number
-            epoch = 1
             job = {
                 'id': id,
                 'model': model,
                 # n means normal here
                 'status': 'n',
-                'address': 'localhost:' + str(start)
+                'address': 'localhost:' + str(start),
+                'epoch': 10
             }
             start += 1
             self.jobs_list.append([job, tm])
@@ -48,5 +48,5 @@ class Generator:
 
 if __name__ == '__main__':
     G = Generator('haha')
-    G.generate(10)
+    G.generate(10, 20)
     G.begin()

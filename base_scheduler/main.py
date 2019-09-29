@@ -9,6 +9,6 @@ if __name__ == '__main__':
     D = Daemon(S)
     S.set_daemon(D)
     # Begin Generating
-    G.generate(2, 10)
+    G.generate(4, 10)
     G.begin()
     print('haha')

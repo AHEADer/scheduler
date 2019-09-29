@@ -42,8 +42,10 @@ class Executor:
         gpus_list = '--gpus_list ' + list_str
         node = '--node ' + job.node
         server_address = '--server_address ' + 'localhost:1080'
-        other = '--num_train_images 5000 --train_epochs 10 --num_eval_images 1000'
-        return self.combine_cmd(' ', base, model, dist, num_gpus, id, port, gpus_list, node, server_address, other)
+        other = '--num_train_images 3000 --num_eval_images 500'
+        epoch = '--train_epochs ' + str(job.ep)
+        return self.combine_cmd(' ', base, model, dist, num_gpus,
+                                id, port, gpus_list, node, server_address, other, epoch)
 
     @staticmethod
     def combine_cmd(char, *cmds):
@@ -67,7 +69,8 @@ if __name__ == '__main__':
     construct_dict = {'id': 's1',
                       'model': 'inceptionv3',
                       'gpus_loc': {'localhost': [0, 2]},
-                      'address': 'localhost:8888'
+                      'address': 'localhost:8888',
+                      'epoch': 10
                       }
     job = Job()
     job.dict_store(construct_dict)

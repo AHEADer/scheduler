@@ -1,4 +1,5 @@
 class Job:
+    ep = 10
     id = ''
     model = ''
     ep_tm = 0
@@ -21,6 +22,7 @@ class Job:
         self.address = job_info['address']
         self.node = next(iter(self.gpus_loc))
         self.gpu_num = len(self.gpus_loc[self.node])
+        self.ep = job_info['ep']
 
 
 if __name__ == '__main__':

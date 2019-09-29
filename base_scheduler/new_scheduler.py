@@ -108,22 +108,22 @@ class Scheduler:
                     if self.cal_gpu_util(job) > 0.5:
                         schedule_jobs.append(job)
                 elif self.cal_gpu_util(job) * job.gpu_num > job.gpu_num - 1:
-                    schedule_jobs.append(job)
+                    schedule_jobs.append(job.id)
             else:
                 continue
 
         # sort job by running time per epoch
-        schedule_jobs = sorted(schedule_jobs, key=lambda item: item.ep_tm)
+        schedule_jobs = sorted(schedule_jobs, key=lambda item: self.running_jobs[item].ep_tm)
         # if len(schedule_jobs) != 0:
         #    print('try to introspect jobs')
-        for picked_job in schedule_jobs:
-            if picked_job.gpu_num <= single_node_max:
+        for jid in schedule_jobs:
+            if self.running_jobs[jid].gpu_num <= single_node_max:
                 # allocate GPU to this job
                 # TODO need to judge whether this job's gpu and allocated gpu in same node
-                gpus_loc = self.get_gpus(picked_job.gpu_num, 'g')
+                gpus_loc = self.get_gpus(self.running_jobs[jid].gpu_num, 'g')
                 if gpus_loc[0] is None:
                     log_print('scheduler.txt', 'Error when allocating GPUs, job id: ' + picked_job.id)
-                self.gpu_grow(picked_job, gpus_loc)
+                self.gpu_grow(self.running_jobs[jid], gpus_loc)
                 available_nodes = self.check_free_gpu()
                 single_node_max = max([len(available_nodes[l]) for l in available_nodes.keys()])
                 # TODO lock jobs that assigned gpu
@@ -191,7 +191,12 @@ class Scheduler:
         for key in info['gpus_loc']:
             for each in info['gpus_loc'][key]:
                 self.resources[key][each] = 1
-        self.growing_jobs.append(info['id'])
+        # speed test again
+        self.running_jobs[info['id']].lock = True
+        self.running_jobs[info['id']].ep = info['ep']
+        self.E.exec(self.running_jobs[info['id']])
+        # self.growing_jobs.append(info['id'])
+
         return
 
     def gpu_shrink(self, job):
@@ -279,7 +284,7 @@ class Scheduler:
             for job_id in self.growing_jobs:
                 grow_list.append(self.running_jobs[job_id])
             if len(grow_list) == 0:
-            	return False
+                return False
             grow_list = sorted(grow_list, key=lambda item: item.grow_gpu_num)
             self.recall_grow(grow_list[0])
             return False
