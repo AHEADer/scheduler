@@ -29,7 +29,7 @@ import threading
 import socket
 import json
 import sys
-
+import time
 sys.path.insert(0, '../../')
 
 from official.keras_application_models import dataset
@@ -69,13 +69,13 @@ def receive(server_ip, port):
     # open a server and wait for job report
     connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    connection.bind(('0.0.0.0', port))
+    connection.bind((server_ip, port))
     connection.listen(10)
     while True:
         current_connection, address = connection.accept()
         data = current_connection.recv(2048)
         info = binary_to_dict(data)
-        job_status = info['type']
+        job_status = info['status']
         node = info['node']
         gpus = info['gpus']
 
@@ -97,6 +97,8 @@ def send_msg(address, message):
 
 
 def run_keras_model_benchmark(_):
+    new_job_thread = threading.Thread(target=receive, args=(FLAGS.server_address.split(':')[0], FLAGS.port,))
+    new_job_thread.start()
     """Run the benchmark on keras model."""
     # Ensure a valid model name was supplied via command line argument
     if FLAGS.model not in MODELS.keys():
@@ -171,13 +173,22 @@ def run_keras_model_benchmark(_):
     training_flags = 0
 
     class LossHistory(tf.keras.callbacks.Callback):
+        def __init__(self):
+            self.start = time.time()
+
         def on_train_begin(self, logs={}):
             return
 
         def on_batch_end(self, batch, logs={}):
-            if batch % 29 == 0:
-                # self.model.stop_training = True
-                pass
+            if batch == 99:
+                hundred = time.time() - self.start
+                # calculate the speed and unlock job
+                msg = {}
+                msg['id'] = FLAGS.id
+                msg['status'] = 'un'
+                msg['ep_tm'] = FLAGS.num_train_images * hundred / (FLAGS.batch_size * 100)
+                send_msg(FLAGS.server_address, msg)
+
             if job_status == 'g':
                 # growing is needed
                 msg = {}
@@ -187,7 +198,7 @@ def run_keras_model_benchmark(_):
                 gpus_loc['0.0.0.0'] = new_gpus_list
                 msg['gpus_loc'] = gpus_loc
                 msg['id'] = FLAGS.id
-                msg['type'] = 'g'
+                msg['status'] = 'g'
                 send_msg(FLAGS.server_address, msg)
                 training_flags = 1
                 self.model.stop_training = True
@@ -225,6 +236,11 @@ def run_keras_model_benchmark(_):
 
     # Clear the session explicitly to avoid session delete error
     tf.keras.backend.clear_session()
+    # Now end the training send back message
+    msg = {}
+    msg['status'] = 'e'
+
+    send_msg(FLAGS.server_address, msg)
 
 
 def define_keras_benchmark_flags():

@@ -7,6 +7,7 @@ import copy
 from utils import *
 from job import *
 from executor import Executor
+import nvidia_smi
 
 # from estimator import Estimator
 # from job import Job
@@ -102,13 +103,18 @@ class Scheduler:
             # if a job is locked, it is under speed test
             if not job.lock:
                 # utilization
-                if job.gpu_util * job.gpu_num > job.gpu_num - 1:
+                if job.gpu_num == 1:
+                    if self.cal_gpu_util(job) > 0.5:
+                        schedule_jobs.append(job)
+                elif self.cal_gpu_util(job) * job.gpu_num > job.gpu_num - 1:
                     schedule_jobs.append(job)
             else:
                 continue
 
         # sort job by running time per epoch
         schedule_jobs = sorted(schedule_jobs, key=lambda item: item.ep_tm)
+        if len(schedule_jobs) != 0:
+            print('try to introspect jobs')
         for picked_job in schedule_jobs:
             if picked_job.gpu_num <= single_node_max:
                 # allocate GPU to this job
@@ -122,6 +128,24 @@ class Scheduler:
                 # TODO lock jobs that assigned gpu
             else:
                 continue
+
+    @staticmethod
+    def cal_gpu_util(job):
+        ct = 0
+        gpu = 0
+        nvidia_smi.nvmlInit()
+        for key in job.gpus_loc.keys():
+            for i in job.gpus_loc[key]:
+                ct += 1
+                handle = nvidia_smi.nvmlDeviceGetHandleByIndex(i)
+                res = nvidia_smi.nvmlDeviceGetUtilizationRates(handle)
+                gpu += res.gpu
+        if ct > 0:
+            avg = gpu/ct
+            return avg
+        else:
+            print('job no gpu')
+            return 0
 
     def get_gpus(self, gpu_num, type):
         # type='g' growing, need to wait for checkpoint while new jobs might come
@@ -196,15 +220,18 @@ class Scheduler:
         if info['status'] == 'e':
             del self.running_jobs[info['id']]
         elif info['status'] == 'n':
-        	gpu_tu = self.get_gpus(1, 'n')
-        	info['gpus_loc'] = {gpu_tu[0]: gpu_tu[1]}
-        	new_job = self.generate_new_job_by_info(info)
-        	# get one GPU for it to run
-        	self.running_jobs[info['id']] = new_job
-        	print('exec job')
-        	self.E.exec(new_job)
+            gpu_tu = self.get_gpus(1, 'n')
+            info['gpus_loc'] = {gpu_tu[0]: gpu_tu[1]}
+            new_job = self.generate_new_job_by_info(info)
+            # get one GPU for it to run
+            self.running_jobs[info['id']] = new_job
+            print('exec job')
+            self.E.exec(new_job)
 
-
+    def unlock(self, info):
+        print('----unlock job %s' % info['id'])
+        self.running_jobs[info['id']].lock = False
+        self.running_jobs[info['ep_tm']].lock = info['ep_tm']
 
     @staticmethod
     def generate_new_job_by_info(info):

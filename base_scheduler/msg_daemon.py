@@ -21,12 +21,14 @@ class Daemon:
             data = current_connection.recv(2048)
             print("receive a job")
             info = binary_to_dict(data)
-            if info['type'] == 'g':
+            if info['status'] == 'g':
                 self.receive_grow(info)
-            elif info['type'] == 's':
+            elif info['status'] == 's':
                 self.receive_shrink(info)
-            elif info['type'] == 'e':
+            elif info['status'] == 'e':
                 self.receive_end(info)
+            elif info['status'] == 'un':
+                self.unlock(info)
 
     # scheduler part begin
     def ask_grow(self):
@@ -66,4 +68,6 @@ class Daemon:
         print(info)
         return
 
+    def unlock(self, info):
+        self.scheduler.unlock(info)
     # job part end
