@@ -4,6 +4,7 @@ import socket
 import threading
 import json
 
+
 class Daemon:
     def __init__(self, scheduler=None):
         self.scheduler = scheduler
@@ -64,12 +65,12 @@ class Daemon:
         return
 
     def receive_shrink(self, info):
+        self.scheduler.shrink_ack(info)
         print(info)
-        return
 
     def receive_end(self, info):
         log_print('daemon.txt', 'end job id: ' + info['id'])
-        return
+        self.scheduler.end(info)
 
     def unlock(self, info):
         log_print('daemon.txt', 'unlock job id: ' + info['id'])

@@ -61,6 +61,7 @@ exit_code = False
 training_flags = 0
 have_trained = 0
 
+
 def binary_to_dict(the_binary):
     jsn = the_binary.decode('utf-8')
     d = json.loads(jsn)
@@ -176,7 +177,6 @@ def run_keras_model_benchmark(_):
             run_params=run_params,
             test_id=FLAGS.benchmark_test_id)
 
-
     class LossHistory(tf.keras.callbacks.Callback):
         def __init__(self):
             self.start = time.time()
@@ -190,6 +190,11 @@ def run_keras_model_benchmark(_):
                 training_flags = 1
                 have_trained = epoch + 1
                 self.model.stop_training = True
+            if job_status == 's':
+                global training_flags, have_trained
+                training_flags = 1
+                have_trained = epoch + 1
+                self.model.stop_training = True
 
         def on_batch_end(self, batch, logs={}):
             if batch == 49:
@@ -199,11 +204,7 @@ def run_keras_model_benchmark(_):
                 msg['id'] = FLAGS.id
                 msg['status'] = 'un'
                 msg['ep_tm'] = FLAGS.num_train_images * hundred / (FLAGS.batch_size * 50)
-                print(FLAGS.server_address)
-                print('-----------------------------')
                 send_msg(FLAGS.server_address, msg)
-
-
 
     # Create callbacks that log metric values about the training and evaluation
     callbacks = model_callbacks.get_model_callbacks(
@@ -247,16 +248,22 @@ def run_keras_model_benchmark(_):
         msg = {}
         gpus_loc = {}
         flags_gpu_list = [int(i) for i in FLAGS.gpus_list]
-        new_gpus_list = gpus + flags_gpu_list
+        if job_status == 'g':
+            new_gpus_list = gpus + flags_gpu_list
+            msg['status'] = 'g'
+        else:
+            new_gpus_list = list(set(flags_gpu_list).difference(set(gpus)))
+            msg['status'] = 's'
+        # TODO hardcoded here
         gpus_loc['localhost'] = new_gpus_list
         msg['gpus_loc'] = gpus_loc
         msg['id'] = FLAGS.id
-        msg['status'] = 'g'
         msg['ep'] = FLAGS.train_epochs - have_trained
         send_msg(FLAGS.server_address, msg)
 
     global exit_code
     exit_code = True
+    exit()
 
 
 def define_keras_benchmark_flags():

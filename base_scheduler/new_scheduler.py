@@ -40,7 +40,7 @@ class Scheduler:
         self.running_info = queue.Queue()
         self.running_jobs = {}
         self.growing_jobs = []
-        self.shrinking_jobs = {}
+        self.shrinking_jobs = []
         self.msg_handler = threading.Thread(target=self._msg_handle, args=())
         self.msg_handler.start()
 
@@ -122,7 +122,7 @@ class Scheduler:
                 # TODO need to judge whether this job's gpu and allocated gpu in same node
                 gpus_loc = self.get_gpus(self.running_jobs[jid].gpu_num, 'g')
                 if gpus_loc[0] is None:
-                    log_print('scheduler.txt', 'Error when allocating GPUs, job id: ' + picked_job.id)
+                    log_print('scheduler.txt', 'Error when allocating GPUs, job id: ' + jid)
                 self.gpu_grow(self.running_jobs[jid], gpus_loc)
                 available_nodes = self.check_free_gpu()
                 single_node_max = max([len(available_nodes[l]) for l in available_nodes.keys()])
@@ -168,7 +168,6 @@ class Scheduler:
         return None, []
 
     def gpu_grow(self, job, gpu_loc):
-        num_gpu = job.gpu_num
         node = gpu_loc[0]
         gpus = gpu_loc[1]
         job.gpu_num += len(gpus)
@@ -182,39 +181,67 @@ class Scheduler:
                'gpus': gpus
                }
         send_msg(job.address, msg)
+        self.growing_jobs.append(job.id)
         job.status = 'growing'
         log_print('scheduler.txt', 'job ' + job.id + ' is growing')
         return 0
 
     def grow_ack(self, info):
         # make gpus occupied
+        ct = 0
         for key in info['gpus_loc']:
             for each in info['gpus_loc'][key]:
+                ct += 1
                 self.resources[key][each] = 1
+
+        self.running_jobs[info['id']].gpu_num = ct
         # speed test again
         self.running_jobs[info['id']].lock = True
         self.running_jobs[info['id']].ep = info['ep']
+        # sleep 1 seconds waiting for GPU release
+        self.growing_jobs.remove(info['id'])
+        time.sleep(1)
         self.E.exec(self.running_jobs[info['id']])
-        # self.growing_jobs.append(info['id'])
 
-        return
+    def shrink_ack(self, info):
+        ct = 0
+        for key in self.running_jobs[info['id']].gpus_loc.keys():
+            for each in self.running_jobs[info['id']].gpus_loc[key]:
+                if self.resources[key][each] == -2:
+                    ct += 1
+                    self.resources[key][each] = 0
+
+        self.running_jobs[info['id']].gpu_num -= ct
+        self.running_jobs[info['id']].gpus_loc = info['gpus_loc']
+        # speed test again
+        self.running_jobs[info['id']].lock = True
+        self.running_jobs[info['id']].ep = info['ep']
+        # sleep 1 seconds waiting for GPU release
+        self.shrinking_jobs.remove(info['id'])
+        time.sleep(1)
+        self.E.exec(self.running_jobs[info['id']])
 
     def gpu_shrink(self, job):
         shrink_gpu_num = job.gpu_num/2
-
+        node = ''
+        gpus = []
         # TODO No multi node version
         for n in job.gpus_loc.keys():
             if len(job.gpus_loc[n]) >= shrink_gpu_num:
                 node = n
                 gpus = job.gpus_loc[n][:shrink_gpu_num]
-                job.gpus_loc[n] = job.gpus_loc[n][shrink_gpu_num:]
+                # job.gpus_loc[n] = job.gpus_loc[n][shrink_gpu_num:]
                 break
+        for gpu in gpus:
+            self.resources[node][gpu] = -2
+
         msg = {'status': 's',
                'node': node,
                'gpus': gpus
                }
         send_msg(job.address, msg)
         job.status = 'shrinking'
+        self.shrinking_jobs.append(job.id)
         return 0
 
     def get_running_jobs(self):
@@ -244,6 +271,8 @@ class Scheduler:
         log_print('scheduler.txt', '----end job ' + info['id'])
         self.release_gpu(self.running_jobs[info['id']])
         del self.running_jobs[info['id']]
+        for each_id in self.shrinking_jobs:
+            self.recall_shrink(self.running_jobs[each_id])
 
     def release_gpu(self, job):
         for node in job.gpus_loc.keys():
@@ -262,7 +291,7 @@ class Scheduler:
             return True
         # check growing gpu and recall them
         # TODO recall growing strategy is needed
-        if self.growing_jobs == {}:
+        if not self.growing_jobs:
             # no growing jobs, which means cannot recall growing
             # then we need to find jobs to shrink
             # find jobs that is unlocked and have more than one GPU
@@ -275,9 +304,9 @@ class Scheduler:
             if len(job_sk_list) == 0:
                 return False
             else:
-                job_sk_list = sorted(job_sk_list, key=lambda item: item.gpu_num)
+                job_sk_list = sorted(job_sk_list, key=lambda item: self.cal_gpu_util(item))
                 # notify to shrink but still tell new jobs that cannot run now
-                self.gpu_shrink(job_sk_list[0])
+                self.gpu_shrink(job_sk_list[-1])
                 return False
         else:
             grow_list = []
@@ -285,18 +314,46 @@ class Scheduler:
                 grow_list.append(self.running_jobs[job_id])
             if len(grow_list) == 0:
                 return False
-            grow_list = sorted(grow_list, key=lambda item: item.grow_gpu_num)
-            self.recall_grow(grow_list[0])
+            grow_list = sorted(grow_list, key=lambda item: self.cal_gpu_util(item))
+            # recall one that gpu utilization is the lowest
+            self.recall_grow(grow_list[-1])
             return False
 
     def receive_running_info(self, info):
         self.running_info.put(info)
 
     def recall_grow(self, job):
+        gpus = []
+        n = ''
+        for node in job.gpus_loc.keys():
+            for gpu in job.gpus_loc[node]:
+                if self.resources[node][gpu] == -1:
+                    self.resources[node][gpu] = 0
+                    gpus.append(gpu)
+                    n = node
 
-        return
+        msg = {'status': 'rg',
+               'node': n,
+               'gpus': gpus
+               }
+        send_msg(job.address, msg)
+        self.growing_jobs.remove(job.id)
 
-    def recall_shrink(self):
-        return
+    def recall_shrink(self, job):
+        gpus = []
+        n = ''
+        for node in job.gpus_loc.keys():
+            n = node
+            for gpu in job.gpus_loc[node]:
+                gpus.append(gpu)
+                if self.resources[node][gpu] == -2:
+                    self.resources[node][gpu] = 1
+
+        msg = {'status': 'rs',
+               'node': n,
+               'gpus': gpus
+               }
+        send_msg(job.address, msg)
+        self.shrinking_jobs.remove(job.id)
 
 
