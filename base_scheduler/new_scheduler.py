@@ -79,8 +79,8 @@ class Scheduler:
                 if gpu == 0:
                     node_list.append(number)
                 number += 1
-            if len(node_list) > 0:
-                free_dict[node] = node_list
+            # if len(node_list) > 0:
+            free_dict[node] = node_list
         return free_dict
 
     def introspect(self):

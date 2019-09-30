@@ -185,13 +185,12 @@ def run_keras_model_benchmark(_):
             return
 
         def on_epoch_end(self, epoch, logs={}):
+            global training_flags, have_trained
             if job_status == 'g':
-                global training_flags, have_trained
                 training_flags = 1
                 have_trained = epoch + 1
                 self.model.stop_training = True
             if job_status == 's':
-                global training_flags, have_trained
                 training_flags = 1
                 have_trained = epoch + 1
                 self.model.stop_training = True
