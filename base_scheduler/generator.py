@@ -11,14 +11,14 @@ class Generator:
         self.jobs_list = []
         self.scheduler = a_scheduler
 
-    def generate(self, job_num, span):
+    def generate(self, job_num, time_span, epoch_span):
         # batch size is discrete
         batch_size = [32, 64, 128, 256, 512, 1024, 2048]
         start = 8888
         # learning rate is continuous
         for i in range(job_num):
             id = str(i+1)
-            tm = time.time() + random.uniform(0, span)
+            tm = time.time() + random.uniform(0, time_span)
             bs = batch_size[random.randrange(0, 7)]
             model = self.models_list[random.randrange(0, 12)]
             # TODO adjust/tune this number
@@ -28,7 +28,7 @@ class Generator:
                 # n means normal here
                 'status': 'n',
                 'address': 'localhost:' + str(start),
-                'ep': 8
+                'ep': random.randint(epoch_span[0], epoch_span[1])
             }
             start += 1
             self.jobs_list.append([job, tm])

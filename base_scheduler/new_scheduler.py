@@ -58,6 +58,7 @@ class Scheduler:
 
             if self.init_job_queue.empty():
                 self.introspect()
+                time.sleep(2)
 
     def set_daemon(self, daemon):
         self.daemon = daemon
@@ -205,6 +206,7 @@ class Scheduler:
         # sleep 1 seconds waiting for GPU release
         self.growing_jobs.remove(info['id'])
         time.sleep(1)
+        log_print('scheduler.txt', 'job ' + job.id + ' has grown')
         self.E.exec(self.running_jobs[info['id']])
 
     def shrink_ack(self, info):
@@ -224,6 +226,7 @@ class Scheduler:
         self.shrinking_jobs.remove(info['id'])
         self.running_jobs[info['id']].status = 'n'
         time.sleep(1)
+        log_print('scheduler.txt', 'job ' + job.id + ' has shrunk')
         self.E.exec(self.running_jobs[info['id']])
 
     def gpu_shrink(self, job):
