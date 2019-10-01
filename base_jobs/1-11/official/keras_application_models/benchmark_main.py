@@ -197,6 +197,7 @@ def run_keras_model_benchmark(_):
                 self.model.stop_training = True
 
         def on_batch_end(self, batch, logs={}):
+            global lock
             if batch == 49 and lock is True:
                 hundred = time.time() - self.start
                 # calculate the speed and unlock job
@@ -205,7 +206,6 @@ def run_keras_model_benchmark(_):
                 msg['status'] = 'un'
                 msg['ep_tm'] = FLAGS.num_train_images * hundred / (FLAGS.batch_size * 50)
                 send_msg(FLAGS.server_address, msg)
-                global lock
                 lock = False
 
     # Create callbacks that log metric values about the training and evaluation
