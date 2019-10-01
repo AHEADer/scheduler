@@ -125,7 +125,10 @@ class Scheduler:
                     log_print('scheduler.txt', 'Error when allocating GPUs, job id: ' + jid)
                 self.gpu_grow(self.running_jobs[jid], gpus_loc)
                 available_nodes = self.check_free_gpu()
-                single_node_max = max([len(available_nodes[l]) for l in available_nodes.keys()])
+                if len(available_nodes) == 0:
+                    single_node_max = 0
+                else:
+                    single_node_max = max([len(available_nodes[l]) for l in available_nodes.keys()])
                 # TODO lock jobs that assigned gpu
             else:
                 continue
@@ -197,6 +200,7 @@ class Scheduler:
         self.running_jobs[info['id']].gpu_num = ct
         # speed test again
         self.running_jobs[info['id']].lock = True
+        self.running_jobs[info['id']].status = 'n'
         self.running_jobs[info['id']].ep = info['ep']
         # sleep 1 seconds waiting for GPU release
         self.growing_jobs.remove(info['id'])
@@ -218,6 +222,7 @@ class Scheduler:
         self.running_jobs[info['id']].ep = info['ep']
         # sleep 1 seconds waiting for GPU release
         self.shrinking_jobs.remove(info['id'])
+        self.running_jobs[info['id']].status = 'n'
         time.sleep(1)
         self.E.exec(self.running_jobs[info['id']])
 
@@ -271,6 +276,9 @@ class Scheduler:
         log_print('scheduler.txt', '----end job ' + info['id'])
         self.release_gpu(self.running_jobs[info['id']])
         del self.running_jobs[info['id']]
+        log_print('scheduler.txt', '----current GPU util: ' + str(self.resources))
+        for each in self.running_jobs.keys():
+            log_print('scheduler.txt', '----job log: ' + str(vars(self.running_jobs[each])))
         for each_id in self.shrinking_jobs:
             self.recall_shrink(self.running_jobs[each_id])
 

@@ -24,7 +24,7 @@ class Daemon:
             current_connection, address = connection.accept()
             data = current_connection.recv(2048)
             info = binary_to_dict(data)
-            log_print('daemon.txt', 'receive a job, id = ' + info['id'])
+            # log_print('daemon.txt', 'receive a job, id = ' + info['id'])
             if info['status'] == 'g':
                 self.receive_grow(info)
             elif info['status'] == 's':
@@ -58,6 +58,7 @@ class Daemon:
     # job part begin
     def receive_grow(self, info):
         # print(info)
+        log_print('daemon.txt', 'grow ack job id: ' + info['id'])
         self.scheduler.grow_ack(info)
         return
 
@@ -65,8 +66,8 @@ class Daemon:
         return
 
     def receive_shrink(self, info):
+        log_print('daemon.txt', 'shrink ack job id: ' + info['id'])
         self.scheduler.shrink_ack(info)
-        print(info)
 
     def receive_end(self, info):
         log_print('daemon.txt', 'end job id: ' + info['id'])
@@ -75,4 +76,3 @@ class Daemon:
     def unlock(self, info):
         log_print('daemon.txt', 'unlock job id: ' + info['id'])
         self.scheduler.unlock(info)
-    # job part end
