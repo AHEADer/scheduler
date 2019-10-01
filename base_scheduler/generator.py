@@ -2,6 +2,7 @@ import random
 import time
 import numpy as np
 from pprint import pprint
+from logger import log_print
 
 
 class Generator:
@@ -38,6 +39,7 @@ class Generator:
         print('generator begins!')
         last_tm = time.time()
         for each in self.jobs_list:
+            log_print('generator.txt', ' -------' + str(each))
             remain = each[1]-last_tm
             print('next job will come in ' + str(remain) + ' sec')
             last_tm = each[1]
