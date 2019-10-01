@@ -48,5 +48,5 @@ class Generator:
 
 if __name__ == '__main__':
     G = Generator('haha')
-    G.generate(10, 20)
+    G.generate(10, 20, [2, 8])
     G.begin()

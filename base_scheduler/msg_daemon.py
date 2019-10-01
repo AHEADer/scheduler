@@ -18,13 +18,13 @@ class Daemon:
         # open a server and wait for job report
         connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        connection.bind(('localhost', 1080))
+        connection.bind(('', 1080))
         connection.listen(50)
         while True:
             current_connection, address = connection.accept()
             data = current_connection.recv(2048)
             info = binary_to_dict(data)
-            # log_print('daemon.txt', 'receive a job, id = ' + info['id'])
+            log_print('daemon.txt', 'receive a message: ' + str(info))
             if info['status'] == 'g':
                 self.receive_grow(info)
             elif info['status'] == 's':

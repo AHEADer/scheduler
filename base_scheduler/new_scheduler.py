@@ -102,6 +102,8 @@ class Scheduler:
 
         schedule_jobs = []
         for job in jobs:
+            if job.id in self.growing_jobs:
+                continue
             # if a job is locked, it is under speed test
             if not job.lock:
                 # utilization
@@ -206,7 +208,7 @@ class Scheduler:
         # sleep 1 seconds waiting for GPU release
         self.growing_jobs.remove(info['id'])
         time.sleep(1)
-        log_print('scheduler.txt', 'job ' + job.id + ' has grown')
+        log_print('scheduler.txt', 'job ' + info['id'] + ' has grown')
         self.E.exec(self.running_jobs[info['id']])
 
     def shrink_ack(self, info):
