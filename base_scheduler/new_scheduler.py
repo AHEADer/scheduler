@@ -54,9 +54,11 @@ class Scheduler:
                     self.update_running_info(info)
                 else:
                     # currently no gpu can be allocated
+                    log_print('scheduler.txt', '--- current no gpu allocated')
+                    log_print('scheduler.txt', '----current GPU util: ' + str(self.resources))
                     time.sleep(10)
 
-            if self.init_job_queue.empty():
+            if self.init_job_queue.empty() and self.check_free_gpu != {}:
                 self.introspect()
                 time.sleep(2)
 
@@ -269,7 +271,7 @@ class Scheduler:
             new_job = self.generate_new_job_by_info(info)
             # get one GPU for it to run
             self.running_jobs[info['id']] = new_job
-            print('exec job')
+            # print('exec job')
             self.E.exec(new_job)
 
     def unlock(self, info):
@@ -333,6 +335,7 @@ class Scheduler:
             return False
 
     def receive_running_info(self, info):
+        log_print('scheduler.txt', '--- receive a job ' + info['id'] + ' to queue')
         self.running_info.put(info)
 
     def recall_grow(self, job):

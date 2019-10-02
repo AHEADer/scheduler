@@ -35,15 +35,18 @@ class Executor:
     def py_cmd(self, job):
         base = 'python benchmark_main.py'
         model = '--model ' + job.model
-        dist = '--dist_strat'
         num_gpus = '-ng ' + str(len(job.gpus_loc[job.node]))
+        if len(job.gpus_loc[job.node]) > 1:
+            dist = '--dist_strat'
+        else:
+            dist = '--eager'
         id = '--id ' + job.id
         port = '--port ' + job.address.split(':')[1]
         list_str = ','.join(str(i) for i in job.gpus_loc[job.node])
         gpus_list = '--gpus_list ' + list_str
         node = '--node ' + job.node
         server_address = '--server_address ' + 'localhost:1080'
-        other = '--num_train_images 3000 --num_eval_images 500'
+        other = '--num_train_images 2000 --num_eval_images 500'
         epoch = '--train_epochs ' + str(job.ep)
         return self.combine_cmd(' ', base, model, dist, num_gpus,
                                 id, port, gpus_list, node, server_address, other, epoch)
