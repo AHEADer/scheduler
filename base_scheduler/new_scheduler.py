@@ -58,7 +58,7 @@ class Scheduler:
                     log_print('scheduler.txt', '----current GPU util: ' + str(self.resources))
                     time.sleep(10)
 
-            if self.init_job_queue.empty() and self.check_free_gpu != {}:
+            if self.init_job_queue.empty() and self.check_free_gpu() is True:
                 self.introspect()
                 time.sleep(2)
 
@@ -74,6 +74,13 @@ class Scheduler:
         return resource_dict
 
     def check_free_gpu(self):
+        for node in self.resources.keys():
+            for gpu in self.resources[node]:
+                if gpu == 0:
+                    return True
+        return False
+
+    def return_free_gpus(self):
         free_dict = {}
         for node in self.resources.keys():
             node_list = []
@@ -96,8 +103,8 @@ class Scheduler:
         if len(jobs) == 0:
             return
 
-        available_nodes = self.check_free_gpu()
-        if len(available_nodes) == 0:
+        available_nodes = self.return_free_gpus()
+        if self.check_free_gpu() is False:
             return
 
         single_node_max = max([len(available_nodes[l]) for l in available_nodes.keys()])
@@ -129,8 +136,8 @@ class Scheduler:
                 if gpus_loc[0] is None:
                     log_print('scheduler.txt', 'Error when allocating GPUs, job id: ' + jid)
                 self.gpu_grow(self.running_jobs[jid], gpus_loc)
-                available_nodes = self.check_free_gpu()
-                if len(available_nodes) == 0:
+                available_nodes = self.return_free_gpus()
+                if self.check_free_gpu() is False:
                     single_node_max = 0
                 else:
                     single_node_max = max([len(available_nodes[l]) for l in available_nodes.keys()])
@@ -301,8 +308,8 @@ class Scheduler:
         return new_job
 
     def allocate_gpu(self):
-        free_dict = self.check_free_gpu()
-        if free_dict != {}:
+        free_dict = self.return_free_gpus()
+        if self.check_free_gpu() is True:
             return True
         # check growing gpu and recall them
         # TODO recall growing strategy is needed
