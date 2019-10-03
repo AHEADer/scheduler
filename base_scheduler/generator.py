@@ -7,8 +7,8 @@ from logger import log_print
 
 class Generator:
     def __init__(self, a_scheduler):
-        self.models_list = ['vgg16', 'vgg19', 'inceptionv3', 'xception', 'resnet50', 'inceptionresnetv2',
-                            'mobilenet', 'densenet121', 'densenet169', 'densenet201', 'nasnetmobile']
+        self.models_list = ['vgg16', 'vgg19', 'inceptionv3', 'xception', 'resnet50',
+                            'mobilenet', 'densenet121', 'nasnetmobile']
         self.jobs_list = []
         self.scheduler = a_scheduler
 
@@ -21,7 +21,7 @@ class Generator:
             id = str(i+1)
             tm = time.time() + random.uniform(0, time_span)
             bs = batch_size[random.randrange(0, 4)]
-            model = self.models_list[random.randrange(0, 11)]
+            model = self.models_list[random.randrange(0, 8)]
             # TODO adjust/tune this number
             job = {
                 'id': id,

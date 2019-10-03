@@ -83,6 +83,8 @@ def receive(server_ip, port):
         job_status = info['status']
         node = info['node']
         gpus = info['gpus']
+    print('Connection closed')
+    connection.close()
 
 
 def dict_to_binary(the_dict):
@@ -239,15 +241,14 @@ def run_keras_model_benchmark(_):
     # Clear the session explicitly to avoid session delete error
     tf.keras.backend.clear_session()
     # Now end the training send back message
+    msg = {}
     if training_flags == 0:
-        msg = {}
         msg['status'] = 'e'
         msg['id'] = FLAGS.id
-        send_msg(FLAGS.server_address, msg)
+        # send_msg(FLAGS.server_address, msg)
     else:
         # ask the scheduler to re-run
         # growing is needed
-        msg = {}
         gpus_loc = {}
         flags_gpu_list = [int(i) for i in FLAGS.gpus_list]
         if job_status == 'g':
@@ -261,10 +262,12 @@ def run_keras_model_benchmark(_):
         msg['gpus_loc'] = gpus_loc
         msg['id'] = FLAGS.id
         msg['ep'] = FLAGS.train_epochs - have_trained
-        send_msg(FLAGS.server_address, msg)
+        # send_msg(FLAGS.server_address, msg)
 
     global exit_code
     exit_code = True
+    send_msg(FLAGS.server_address, msg)
+    print('exit')
     exit()
 
 
