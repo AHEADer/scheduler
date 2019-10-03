@@ -1,5 +1,5 @@
 class Job:
-    ep = 10
+    ep = 0
     id = ''
     model = ''
     ep_tm = 0
@@ -23,8 +23,23 @@ class Job:
         self.node = next(iter(self.gpus_loc))
         self.gpu_num = len(self.gpus_loc[self.node])
         self.ep = job_info['ep']
+        self.ep_tm = 0
+        self.lock = True
+        self.grow_gpus = []
+        self.grow_gpu_num = 0
+        self.grow_node = ''
 
 
 if __name__ == '__main__':
     job = Job()
-    print(job.id)
+    info = {
+        'id': '1',
+        'model': 'resnet50',
+        # n means normal here
+        'status': 'n',
+        'address': 'localhost:2345',
+        'ep': 2,
+        'gpus_loc': {'localhost': [2, 3]}
+    }
+    job.dict_store(info)
+    print(vars(job))

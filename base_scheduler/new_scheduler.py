@@ -46,7 +46,7 @@ class Scheduler:
 
     def _msg_handle(self):
         while True:
-            while not self.running_info.empty():
+            if not self.running_info.empty():
                 # TODO: below
                 # Detect if there are available GPUs
                 if self.allocate_gpu():
@@ -56,9 +56,8 @@ class Scheduler:
                     # currently no gpu can be allocated
                     log_print('scheduler.txt', '--- current no gpu allocated')
                     log_print('scheduler.txt', '----current GPU util: ' + str(self.resources))
-                    time.sleep(10)
-
-            if self.init_job_queue.empty() and self.check_free_gpu() is True:
+                time.sleep(10)
+            elif self.init_job_queue.empty() and self.check_free_gpu() is True:
                 self.introspect()
                 time.sleep(2)
 
@@ -270,6 +269,7 @@ class Scheduler:
         return _
 
     def update_running_info(self, info):
+        log_print('scheduler.txt', 'update job: ' + str(info))
         if info['status'] == 'e':
             del self.running_jobs[info['id']]
         elif info['status'] == 'n':
@@ -308,7 +308,7 @@ class Scheduler:
         return new_job
 
     def allocate_gpu(self):
-        free_dict = self.return_free_gpus()
+        # free_dict = self.return_free_gpus()
         if self.check_free_gpu() is True:
             return True
         # check growing gpu and recall them
