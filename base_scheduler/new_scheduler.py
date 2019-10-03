@@ -47,6 +47,7 @@ class Scheduler:
     def _msg_handle(self):
         while True:
             if not self.running_info.empty():
+                log_print('handler.txt', '--- print running queue ' + str(list(self.running_info.queue)))
                 # TODO: below
                 # Detect if there are available GPUs
                 if self.allocate_gpu():
@@ -240,6 +241,7 @@ class Scheduler:
         self.E.exec(self.running_jobs[info['id']])
 
     def gpu_shrink(self, job):
+        log_print('scheduler.txt', '--- gpu shrink, job id: ' + job.id)
         shrink_gpu_num = job.gpu_num/2
         node = ''
         gpus = []
@@ -318,11 +320,11 @@ class Scheduler:
             # then we need to find jobs to shrink
             # find jobs that is unlocked and have more than one GPU
             job_sk_list = []
-            for job in self.running_jobs.keys():
-                if job.lock is True or job.gpu_num == 1:
+            for job_id in self.running_jobs.keys():
+                if self.running_jobs[job_id].lock is True or self.running_jobs[job_id].gpu_num == 1:
                     continue
                 else:
-                    job_sk_list.append(job)
+                    job_sk_list.append(self.running_jobs[job_id])
             if len(job_sk_list) == 0:
                 return False
             else:
@@ -346,6 +348,7 @@ class Scheduler:
         self.running_info.put(info)
 
     def recall_grow(self, job):
+        log_print('scheduler.txt', '--- recall grow, job id: ' + job.id)
         gpus = []
         n = ''
         for node in job.gpus_loc.keys():
