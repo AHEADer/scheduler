@@ -15,6 +15,7 @@ class Executor:
         py = self.py_cmd(job)
         exec_cmd = self.combine_cmd(' ', self.gpu_cmd(job.gpus_loc[job.node]), py)
         combine = self.combine_cmd(';', source, cd, exec_cmd)
+        # combine = combine + ' >>' + job.id + '.txt'
         final_cmd = ssh + ' "' + combine + '"'
         log_print('cmd.txt', final_cmd)
         # print(final_cmd)

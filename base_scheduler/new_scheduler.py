@@ -189,19 +189,20 @@ class Scheduler:
     def gpu_grow(self, job, gpu_loc):
         node = gpu_loc[0]
         gpus = gpu_loc[1]
-        job.gpu_num += len(gpus)
+        self.running_jobs[job.id].gpu_num += len(gpus)
         if node in job.gpus_loc.keys():
-            job.gpus_loc[node] = job.gpus_loc[node] + gpus
+            self.running_jobs[job.id].gpus_loc[node] = job.gpus_loc[node] + gpus
         else:
-            job.gpus_loc[node] = gpus
+            self.running_jobs[job.id].gpus_loc[node] = gpus
         # Notify this job
         msg = {'status': 'g',
                'node': node,
                'gpus': gpus
                }
         send_msg(job.address, msg)
+        self.running_jobs[job.id].status = 'growing'
+        self.running_jobs[job.id].lock = True
         self.growing_jobs.append(job.id)
-        job.status = 'growing'
         log_print('scheduler.txt', 'job ' + job.id + ' is growing')
         return 0
 
@@ -240,7 +241,6 @@ class Scheduler:
         # sleep 1 seconds waiting for GPU release
         self.shrinking_jobs.remove(info['id'])
         self.running_jobs[info['id']].status = 'n'
-        time.sleep(1)
         log_print('scheduler.txt', 'job ' + job.id + ' has shrunk')
         self.E.exec(self.running_jobs[info['id']])
 
@@ -258,13 +258,13 @@ class Scheduler:
                 break
         for gpu in gpus:
             self.resources[node][gpu] = -2
-
         msg = {'status': 's',
                'node': node,
                'gpus': gpus
                }
         send_msg(job.address, msg)
-        job.status = 'shrinking'
+        self.running_jobs[job.id].status = 'shrinking'
+        self.running_jobs[job.id].lock = True
         self.shrinking_jobs.append(job.id)
         return 0
 
@@ -370,6 +370,7 @@ class Scheduler:
         self.growing_jobs.remove(job.id)
 
     def recall_shrink(self, job):
+        log_print('scheduler.txt', '--- recall shrink, job id: ' + job.id)
         gpus = []
         n = ''
         for node in job.gpus_loc.keys():

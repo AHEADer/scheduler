@@ -29,6 +29,7 @@ import threading
 import socket
 import json
 import sys
+import os
 import time
 sys.path.insert(0, '../../')
 
@@ -73,7 +74,14 @@ def receive(server_ip, port):
     # open a server and wait for job report
     connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    connection.bind((server_ip, port))
+    try:
+        connection.bind((server_ip, port))
+    except:
+        # original job does not close the port
+        # kill original job process
+        os.system('kill $(lsof -t -i:' + str(port) + ')')
+        connection.bind((server_ip, port))
+
     connection.listen(10)
     while not exit_code:
         current_connection, address = connection.accept()
@@ -266,6 +274,7 @@ def run_keras_model_benchmark(_):
 
     global exit_code
     exit_code = True
+    time.sleep(1)
     send_msg(FLAGS.server_address, msg)
     print('exit')
     exit()
