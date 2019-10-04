@@ -2,6 +2,7 @@ import threading
 import socket
 import queue
 import json
+from logger import log_print
 
 
 # receive/send message
@@ -43,6 +44,8 @@ def send_msg(address, message):
     sock.connect(server_address)
     try:
         sock.sendall(dict_to_binary(message))
+    except:
+        log_print('utils.txt', 'cannot send to address: ' + address + ' content: ' + message)
     finally:
         sock.close()
 

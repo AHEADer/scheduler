@@ -46,21 +46,25 @@ class Scheduler:
 
     def _msg_handle(self):
         while True:
+            log_print('while.txt', 'while is running')
             if not self.running_info.empty():
                 log_print('handler.txt', '--- print running queue ' + str(list(self.running_info.queue)))
                 # TODO: below
                 # Detect if there are available GPUs
-                if self.allocate_gpu():
-                    info = self.running_info.get()
-                    self.update_running_info(info)
-                else:
-                    # currently no gpu can be allocated
-                    log_print('scheduler.txt', '--- current no gpu allocated')
-                    log_print('scheduler.txt', '----current GPU util: ' + str(self.resources))
-                time.sleep(10)
+                try:
+                    if self.allocate_gpu():
+                        info = self.running_info.get()
+                        self.update_running_info(info)
+                    else:
+                        # currently no gpu can be allocated
+                        log_print('scheduler.txt', '--- current no gpu allocated')
+                        log_print('scheduler.txt', '----current GPU util: ' + str(self.resources))
+                except:
+                    log_print('while.txt', 'current gpu: ' + str(self.resources))
+                    log_print('while.txt', '--- print running queue ' + str(list(self.running_info.queue)))
             elif self.init_job_queue.empty() and self.check_free_gpu() is True:
                 self.introspect()
-                time.sleep(2)
+            time.sleep(1)
 
     def set_daemon(self, daemon):
         self.daemon = daemon
