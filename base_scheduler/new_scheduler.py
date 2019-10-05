@@ -64,7 +64,7 @@ class Scheduler:
                     log_print('while.txt', '--- print running queue ' + str(list(self.running_info.queue)))
             elif self.init_job_queue.empty() and self.check_free_gpu() is True:
                 self.introspect()
-            time.sleep(1)
+            time.sleep(5)
 
     def set_daemon(self, daemon):
         self.daemon = daemon
@@ -241,7 +241,7 @@ class Scheduler:
         # sleep 1 seconds waiting for GPU release
         self.shrinking_jobs.remove(info['id'])
         self.running_jobs[info['id']].status = 'n'
-        log_print('scheduler.txt', 'job ' + job.id + ' has shrunk')
+        log_print('scheduler.txt', 'job ' + info['id'] + ' has shrunk')
         self.E.exec(self.running_jobs[info['id']])
 
     def gpu_shrink(self, job):
@@ -300,13 +300,16 @@ class Scheduler:
 
     def end(self, info):
         log_print('scheduler.txt', '----end job ' + info['id'])
+        time.sleep(1)
         self.release_gpu(self.running_jobs[info['id']])
         del self.running_jobs[info['id']]
         log_print('scheduler.txt', '----current GPU util: ' + str(self.resources))
         for each in self.running_jobs.keys():
             log_print('scheduler.txt', '----job log: ' + str(vars(self.running_jobs[each])))
         for each_id in self.shrinking_jobs:
+            log_print('scheduler.txt', '----recall shrink job: ' + str(each_id))
             self.recall_shrink(self.running_jobs[each_id])
+        log_print('scheduler.txt', '----recall shrink done')
 
     def release_gpu(self, job):
         for node in job.gpus_loc.keys():
