@@ -48,7 +48,7 @@ class Scheduler:
         while True:
             log_print('while.txt', 'while is running')
             if not self.running_info.empty():
-                log_print('handler.txt', '--- print running queue ' + str(list(self.running_info.queue)))
+                # log_print('handler.txt', '--- print running queue ' + str(list(self.running_info.queue)))
                 # TODO: below
                 # Detect if there are available GPUs
                 try:
@@ -246,18 +246,23 @@ class Scheduler:
 
     def gpu_shrink(self, job):
         log_print('scheduler.txt', '--- gpu shrink, job id: ' + job.id)
-        shrink_gpu_num = job.gpu_num/2
-        node = ''
+        shrink_gpu_num = int(job.gpu_num/2)
+        # TODO hardcoded here
+        node = 'localhost'
         gpus = []
         # TODO No multi node version
+        log_print('scheduler.txt', '--- print job: ' + str(vars(job)))
+        # below has error?
         for n in job.gpus_loc.keys():
             if len(job.gpus_loc[n]) >= shrink_gpu_num:
-                node = n
+                # node = n
                 gpus = job.gpus_loc[n][:shrink_gpu_num]
                 # job.gpus_loc[n] = job.gpus_loc[n][shrink_gpu_num:]
-                break
+                # break
+        # above is OK
         for gpu in gpus:
             self.resources[node][gpu] = -2
+
         msg = {'status': 's',
                'node': node,
                'gpus': gpus
@@ -286,6 +291,7 @@ class Scheduler:
             self.running_jobs[info['id']] = new_job
             # print('exec job')
             self.E.exec(new_job)
+
 
     def unlock(self, info):
         log_print('scheduler.txt', '----unlock job ' + info['id'])
@@ -325,7 +331,7 @@ class Scheduler:
             # find jobs that is unlocked and have more than one GPU
             job_sk_list = []
             for job_id in self.running_jobs.keys():
-                if self.running_jobs[job_id].lock is True or self.running_jobs[job_id].gpu_num == 1:
+                if self.running_jobs[job_id].lock or self.running_jobs[job_id].gpu_num == 1 or self.running_jobs[job_id].status != 'n':
                     continue
                 else:
                     job_sk_list.append(self.running_jobs[job_id])

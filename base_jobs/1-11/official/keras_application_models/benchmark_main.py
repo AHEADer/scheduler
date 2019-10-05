@@ -80,6 +80,7 @@ def receive(server_ip, port):
         # original job does not close the port
         # kill original job process
         os.system('kill $(lsof -t -i:' + str(port) + ')')
+        time.sleep(2)
         connection.bind((server_ip, port))
 
     connection.listen(10)
