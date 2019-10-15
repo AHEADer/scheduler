@@ -232,7 +232,6 @@ def run_keras_model_benchmark(_):
             callbacks=callbacks,
             validation_data=val_dataset,
             steps_per_epoch=int(np.ceil(FLAGS.num_train_images / FLAGS.batch_size)),
-            validation_steps=int(np.ceil(FLAGS.num_eval_images / FLAGS.batch_size))
     )
 
     ''' No need for evaluation part

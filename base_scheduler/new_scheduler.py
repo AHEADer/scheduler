@@ -227,6 +227,7 @@ class Scheduler:
 
     def shrink_ack(self, info):
         ct = 0
+        log_print('scheduler.txt', 'job ' + info['id'] + ' begin to shrink')
         for key in self.running_jobs[info['id']].gpus_loc.keys():
             for each in self.running_jobs[info['id']].gpus_loc[key]:
                 if self.resources[key][each] == -2:
@@ -241,7 +242,7 @@ class Scheduler:
         # sleep 1 seconds waiting for GPU release
         self.shrinking_jobs.remove(info['id'])
         self.running_jobs[info['id']].status = 'n'
-        log_print('scheduler.txt', 'job ' + job.id + ' has shrunk')
+        log_print('scheduler.txt', 'job ' + info['id'] + ' has shrunk')
         self.E.exec(self.running_jobs[info['id']])
 
     def gpu_shrink(self, job):
@@ -291,7 +292,6 @@ class Scheduler:
             self.running_jobs[info['id']] = new_job
             # print('exec job')
             self.E.exec(new_job)
-
 
     def unlock(self, info):
         log_print('scheduler.txt', '----unlock job ' + info['id'])
