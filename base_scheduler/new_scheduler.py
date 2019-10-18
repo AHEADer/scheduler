@@ -25,14 +25,6 @@ from logger import log_print
 
 class Scheduler:
     def __init__(self, cluster_nodes, gpu_per_nodes, daemon=None):
-        # self.job_queue = []
-        # self.gpus = [0, 0, 0, 0, 0, 0, 0, 0]
-        # self.cluster_resource = self.cluster_init(node_list, gpu_per_node)
-        # self.gpu_per_node = gpu_per_node
-        # self.current_wait_job = None
-        # self.job_executor = job_executor
-        # self.unpredicted_job = queue.Queue()
-        # self.estimator = Estimator()
         self.E = Executor()
         self.daemon = daemon
         self.init_job_queue = queue.Queue()
