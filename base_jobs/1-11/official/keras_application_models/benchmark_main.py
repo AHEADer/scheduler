@@ -250,7 +250,8 @@ def run_keras_model_benchmark(_):
     tf.keras.backend.clear_session()
     # Now end the training send back message
     msg = {}
-    if training_flags == 0:
+    remain_ep = FLAGS.train_epochs - have_trained
+    if training_flags == 0 or remain_ep == 0:
         msg['status'] = 'e'
         msg['id'] = FLAGS.id
         # send_msg(FLAGS.server_address, msg)

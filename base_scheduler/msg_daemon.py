@@ -59,20 +59,31 @@ class Daemon:
     def receive_grow(self, info):
         # print(info)
         log_print('daemon.txt', 'grow ack job id: ' + info['id'])
-        self.scheduler.grow_ack(info)
-        return
+        try:
+            self.scheduler.grow_ack(info)
+        except Exception as e:
+            log_print('daemon.txt', 'exception receive_grow: ' + str(info))
 
     def receive_recall_grow(self):
         return
 
     def receive_shrink(self, info):
         log_print('daemon.txt', 'shrink ack job id: ' + info['id'])
-        self.scheduler.shrink_ack(info)
+        try:
+            self.scheduler.shrink_ack(info)
+        except Exception as e:
+            log_print('daemon.txt', 'exception receive_shrink: ' + str(info))
 
     def receive_end(self, info):
         log_print('daemon.txt', 'end job id: ' + info['id'])
-        self.scheduler.end(info)
+        try:
+            self.scheduler.end(info)
+        except Exception as e:
+            log_print('daemon.txt', 'exception end: ' + str(info))
 
     def unlock(self, info):
         log_print('daemon.txt', 'unlock job id: ' + info['id'])
-        self.scheduler.unlock(info)
+        try:
+            self.scheduler.unlock(info)
+        except Exception as e:
+            log_print('daemon.txt', 'exception unlock: ' + str(info))
